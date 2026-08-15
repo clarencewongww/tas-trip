@@ -200,3 +200,150 @@ window.TRIP = {
     }
   ]
 };
+
+/* TripData — shared waypoint/leg helpers used by BOTH render.js (timeline rows)
+ * and maps.js (markers / legs).
+ *
+ * Single source of truth for WAYPOINT ORDER: each day's waypoint sequence is
+ * sorted chronologically by time (entries by `start`, origin by `departTime`),
+ * so timeline badges, map marker numbers, drive-row `data-leg` indices and
+ * maps.js `legResults` indices all stay in lockstep. Reads TRIP only — never
+ * mutates it.
+ */
+(function (global) {
+  "use strict";
+  if (typeof global === "undefined" || global === null) return;
+
+  // Times MUST be zero-padded 24-hour "HH:MM" (e.g. "08:05", not "8:05") for
+  // the string sort below to be chronological. Non-matching or missing times
+  // sort last via the sentinel key "99:99".
+  function timeKey(t) {
+    const s = String(t == null ? "" : t).trim();
+    return /^\d{1,2}:\d{2}$/.test(s) ? s : "99:99";
+  }
+
+  function compareTime(a, b) {
+    const ka = timeKey(a);
+    const kb = timeKey(b);
+    return ka < kb ? -1 : ka > kb ? 1 : 0;
+  }
+
+  function coordsOf(p) {
+    const c = p && p.coords;
+    return Array.isArray(c) && c.length >= 2 ? [c[0], c[1]] : null;
+  }
+
+  // Fresh copy of a coords pair, so returned waypoints never share the array
+  // with TRIP (guards the "never mutates TRIP" contract). Non-array / missing
+  // values pass through unchanged, keeping defensive paths intact.
+  function copyCoords(c) {
+    return Array.isArray(c) && c.length >= 2 ? [c[0], c[1]] : c;
+  }
+
+  // "Same point" within ~1e-4 deg (~11 m) — matches maps.js / render.js.
+  function closeCoords(a, b) {
+    if (!a || !b) return false;
+    return Math.abs(a[0] - b[0]) < 1e-4 && Math.abs(a[1] - b[1]) < 1e-4;
+  }
+
+  /**
+   * Chronologically sorted waypoint sequence for one day: the optional origin
+   * plus every entry carrying a valid coords array (length >= 2). Returns fresh
+   * objects — never mutates TRIP data. Array.prototype.sort is stable, so
+   * equal-time waypoints keep their authored relative order.
+   */
+  function getWaypoints(day) {
+    if (!day) return [];
+    const wps = [];
+    if (
+      day.origin &&
+      Array.isArray(day.origin.coords) &&
+      day.origin.coords.length >= 2
+    ) {
+      wps.push({
+        title: day.origin.title || "Departure",
+        time: day.origin.departTime || "",
+        coords: copyCoords(day.origin.coords),
+        kind: "origin",
+        entryIdx: -1,
+        alt: false,
+        place: "",
+        note: "",
+        start: null,
+        end: null,
+        departTime: day.origin.departTime || null,
+        kindName: "transit"
+      });
+    }
+    (Array.isArray(day.entries) ? day.entries : []).forEach(function (e, j) {
+      if (e && Array.isArray(e.coords) && e.coords.length >= 2) {
+        wps.push({
+          title: e.title || "",
+          time: e.start || "",
+          coords: copyCoords(e.coords),
+          kind: "entry",
+          entryIdx: j,
+          alt: !!e.alt,
+          place: e.place || "",
+          note: e.note || "",
+          start: e.start || null,
+          end: e.end || null,
+          departTime: null,
+          kindName: e.kind || ""
+        });
+      }
+    });
+    wps.sort(function (a, b) {
+      return compareTime(a.time, b.time);
+    });
+    return wps;
+  }
+
+  /**
+   * Leg object for the waypoint pair a -> b, or null.
+   * 1) Exact title match first (leg.from === a.title && leg.to === b.title).
+   * 2) Coordinate fallback: the stop titled leg.from has coords ≈ a.coords and
+   *    the stop titled leg.to has coords ≈ b.coords (titles looked up among
+   *    origin + entries; epsilon ~1e-4 deg).
+   * This resolves day-2's pair "Depart — Swansea" -> "Wineglass Bay lookout
+   * walk" to the authored leg "Free morning — Swansea" -> "Wineglass Bay
+   * lookout walk", which shares the origin's coordinates.
+   */
+  function findLeg(day, a, b) {
+    if (!day || !Array.isArray(day.legs) || !a || !b) return null;
+    const at = a.title;
+    const bt = b.title;
+
+    for (let k = 0; k < day.legs.length; k++) {
+      const leg = day.legs[k];
+      if (leg && leg.from === at && leg.to === bt) return leg;
+    }
+
+    const ac = coordsOf(a);
+    const bc = coordsOf(b);
+    if (!ac || !bc) return null;
+
+    const titleCoords = new Map();
+    if (day.origin && day.origin.title) {
+      titleCoords.set(day.origin.title, coordsOf(day.origin));
+    }
+    (Array.isArray(day.entries) ? day.entries : []).forEach(function (e) {
+      if (e && e.title) titleCoords.set(e.title, coordsOf(e));
+    });
+
+    for (let k = 0; k < day.legs.length; k++) {
+      const leg = day.legs[k];
+      if (!leg) continue;
+      const fc = titleCoords.get(leg.from);
+      const tc = titleCoords.get(leg.to);
+      if (fc && tc && closeCoords(fc, ac) && closeCoords(tc, bc)) return leg;
+    }
+    return null;
+  }
+
+  global.TripData = {
+    getWaypoints: getWaypoints,
+    findLeg: findLeg,
+    timeKey: timeKey
+  };
+})(typeof window !== "undefined" ? window : null);

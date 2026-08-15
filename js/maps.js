@@ -15,8 +15,9 @@
  *
  * dayMapApi:
  *   legResults: Array<{ from, to, km, min, mode, source }>
- *   getLegResults(), highlight(i), panTo(i), addUserMarker(latlng, accuracy?),
- *   fitUser(), invalidateSize(), destroy(), setTheme(mode)
+ *   getLegResults(), highlight(i), panTo(i), fitLeg(i),
+ *   addUserMarker(latlng, accuracy?), fitUser(), invalidateSize(), destroy(),
+ *   setTheme(mode)
  */
 (function (global) {
   if (typeof global === "undefined" || typeof global.window === "undefined") return;
@@ -321,6 +322,7 @@
     getLegResults: function () { return []; },
     highlight: function () {},
     panTo: function () {},
+    fitLeg: function () {},
     addUserMarker: function () {},
     fitUser: function () {},
     invalidateSize: function () {},
@@ -407,37 +409,46 @@
     let destroyed = false;
     let tileLayer = null;
     let activeMarkerIndex = null;
-    let focusTimer = null;
     let userMarker = null;
     let userAccuracyCircle = null;
 
-    // Waypoint sequence: [origin] + entries (origin first when present).
+    // Waypoint sequence: origin + entries with coords, CHRONOLOGICALLY sorted
+    // (by start / depart time) via TripData.getWaypoints — the SAME sequence
+    // the timeline uses, so marker numbers, timeline badges, drive-row
+    // data-leg indices and legResults indices stay in lockstep. Day-2's origin
+    // ("Depart — Swansea", 12:00) sorts AFTER "Free morning — Swansea" (09:00,
+    // same coords).
     const waypoints = [];
-    if (day && day.origin && Array.isArray(day.origin.coords)) {
-      waypoints.push({
-        title: day.origin.title || "Departure",
-        coords: day.origin.coords,
-        start: null,
-        end: null,
-        place: "",
-        departTime: day.origin.departTime || null,
-        alt: false
-      });
-    }
-    if (day && Array.isArray(day.entries)) {
-      day.entries.forEach(function (e) {
-        if (e && Array.isArray(e.coords)) {
-          waypoints.push({
-            title: e.title || "",
-            coords: e.coords,
-            start: e.start || null,
-            end: e.end || null,
-            place: e.place || "",
-            departTime: null,
-            alt: !!e.alt
-          });
-        }
-      });
+    if (win.TripData && typeof win.TripData.getWaypoints === "function") {
+      waypoints.push.apply(waypoints, win.TripData.getWaypoints(day));
+    } else {
+      // Fallback (no TripData): origin first, then entries in authored order.
+      if (day && day.origin && Array.isArray(day.origin.coords)) {
+        waypoints.push({
+          title: day.origin.title || "Departure",
+          coords: day.origin.coords,
+          start: null,
+          end: null,
+          place: "",
+          departTime: day.origin.departTime || null,
+          alt: false
+        });
+      }
+      if (day && Array.isArray(day.entries)) {
+        day.entries.forEach(function (e) {
+          if (e && Array.isArray(e.coords)) {
+            waypoints.push({
+              title: e.title || "",
+              coords: e.coords,
+              start: e.start || null,
+              end: e.end || null,
+              place: e.place || "",
+              departTime: null,
+              alt: !!e.alt
+            });
+          }
+        });
+      }
     }
 
     // Tiles (theme-aware; re-applied on "themechange" / setTheme).
@@ -446,12 +457,13 @@
 
     // Numbered markers + popups (DOM built with textContent — no HTML string
     // interpolation of itinerary data).
-    // Waypoints that share the exact same coordinates (origin == "free
-    // morning" entry, two HBA entries, etc.) would otherwise stack and let the
-    // later marker hide the earlier one's number. Each subsequent marker at
-    // the same point is fanned out 30 px to the right via a left-shifted
-    // anchor, keeping both numbers readable. markers[] order stays waypoint
-    // order — the rest of the module relies on that index.
+    // Waypoints that share the exact same coordinates (day-2 "Free morning —
+    // Swansea" == origin "Depart — Swansea", two HBA entries, etc.) would
+    // otherwise stack and let the later marker hide the earlier one's number.
+    // Each subsequent marker at the same point is fanned out 30 px to the
+    // right via a left-shifted anchor, keeping both numbers readable.
+    // markers[] order stays waypoint (chronological) order — the rest of the
+    // module relies on that index.
     const stackCounts = new Map(); // coordKey -> number of markers already placed there
 
     const markers = waypoints.map(function (wp, i) {
@@ -513,11 +525,17 @@
     // driving legs resolve asynchronously. Exposed live on the api.
     const legResults = new Array(Math.max(0, waypoints.length - 1)).fill(null);
 
-    function findLeg(fromTitle, toTitle) {
-      if (!day || !Array.isArray(day.legs)) return null;
+    function findLeg(a, b) {
+      if (win.TripData && typeof win.TripData.findLeg === "function") {
+        // TripData.findLeg: exact title match, then coordinate match (e.g.
+        // day-2 "Depart — Swansea" -> Wineglass resolves to the authored leg
+        // from "Free morning — Swansea", which shares the origin's coords).
+        return win.TripData.findLeg(day, a, b);
+      }
+      if (!day || !Array.isArray(day.legs) || !a || !b) return null;
       for (let k = 0; k < day.legs.length; k++) {
         const l = day.legs[k];
-        if (l && l.from === fromTitle && l.to === toTitle) return l;
+        if (l && l.from === a.title && l.to === b.title) return l;
       }
       return null;
     }
@@ -569,7 +587,7 @@
         return Promise.resolve();
       }
 
-      const leg = findLeg(a.title, b.title);
+      const leg = findLeg(a, b);
       const mode = leg && leg.mode ? leg.mode : "driving";
 
       if (mode === "driving") {
@@ -714,6 +732,26 @@
     ensureResizeListener();
     activeMaps.add(themeEntry);
 
+    // Per-marker focus-pulse timers (panTo / fitLeg). Keyed by marker index so
+    // rapid clicks never stack or leak timers.
+    const focusTimers = new Map();
+
+    /** Pulse a marker with .trip-marker--focus for ~1.4 s (reused by panTo
+     *  and fitLeg; previous pulse on the same marker is cancelled first). */
+    function pulseMarker(i) {
+      const marker = markers[i];
+      if (!marker) return;
+      const prev = focusTimers.get(i);
+      if (prev) clearTimeout(prev);
+      const el = marker.getElement();
+      if (el) el.classList.add("trip-marker--focus");
+      focusTimers.set(i, setTimeout(function () {
+        focusTimers.delete(i);
+        const current = marker.getElement();
+        if (current) current.classList.remove("trip-marker--focus");
+      }, 1400));
+    }
+
     const api = {
       legResults: legResults,
 
@@ -741,19 +779,36 @@
         if (destroyed) return;
         const marker = markers[i];
         if (!marker) return;
-        if (focusTimer !== null) {
-          clearTimeout(focusTimer);
-          focusTimer = null;
-        }
-        const el = marker.getElement();
-        if (el) el.classList.add("trip-marker--focus");
-        focusTimer = setTimeout(function () {
-          focusTimer = null;
-          const current = marker.getElement();
-          if (current) current.classList.remove("trip-marker--focus");
-        }, 1400);
+        pulseMarker(i);
         try {
-          map.setView(marker.getLatLng(), Math.max(map.getZoom(), 14), { animate: true });
+          map.setView(marker.getLatLng(), Math.max(map.getZoom(), 14), { animate: !prefersReducedMotion() });
+        } catch (err) { /* hidden container — ignore */ }
+      },
+
+      /** Zoom the map to show the leg between sorted waypoints i and i+1
+       *  (fitBounds), pulsing BOTH endpoint markers. Same-coordinate pairs
+       *  just zoom in on the shared point. Guards: destroyed, non-integer or
+       *  out-of-range index, missing coords -> silent no-op. */
+      fitLeg: function (i) {
+        if (destroyed) return;
+        if (!Number.isInteger(i) || i < 0 || i >= waypoints.length - 1) return;
+        const a = waypoints[i];
+        const b = waypoints[i + 1];
+        const ac = normalizePair(a && a.coords);
+        const bc = normalizePair(b && b.coords);
+        if (!ac || !bc) return;
+        pulseMarker(i);
+        pulseMarker(i + 1);
+        try {
+          if (sameCoords(ac, bc)) {
+            map.setView(ac, Math.max(map.getZoom(), 15), { animate: !prefersReducedMotion() });
+          } else {
+            map.fitBounds(L.latLngBounds([ac, bc]), {
+              padding: [60, 60],
+              maxZoom: 16,
+              animate: !prefersReducedMotion()
+            });
+          }
         } catch (err) { /* hidden container — ignore */ }
       },
 
@@ -812,10 +867,8 @@
       destroy: function () {
         if (destroyed) return;
         destroyed = true;
-        if (focusTimer !== null) {
-          clearTimeout(focusTimer);
-          focusTimer = null;
-        }
+        focusTimers.forEach(function (t) { clearTimeout(t); });
+        focusTimers.clear();
         activeMaps.delete(themeEntry);
         try {
           map.remove();

@@ -910,6 +910,46 @@ img, svg {
   color: var(--muted);
 }
 
+/* Drive rows are clickable — clicking zooms the day map to that leg
+   (render.js delegated handler -> maps.js api.fitLeg). */
+.drive-row {
+  cursor: pointer;
+}
+
+.drive-row:hover {
+  background-color: color-mix(in oklab, var(--brand) 6%, transparent);
+}
+
+/* One-shot highlight while the leg is framed on the map (~1s; same keyframes
+   as the stop-row flash). */
+.drive-row--flash {
+  animation: tl-row-flash 1000ms ease-out;
+}
+
+/* Right-side chevron hint that the row zooms the map. */
+.drive-row__body {
+  position: relative;
+  padding-right: 20px;
+}
+
+.drive-row__body::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: translateY(-50%) rotate(-45deg);
+  opacity: 0.55;
+}
+
+.drive-row:hover .drive-row__body::after {
+  opacity: 1;
+  border-color: var(--brand-strong);
+}
+
 /* ---------------------------------------------------------------------
    Day maps (Leaflet)
    --------------------------------------------------------------------- */
@@ -1145,10 +1185,13 @@ img, svg {
     animation: none !important;
   }
 
-  /* Static (non-animated) flash so reduced-motion users still get feedback. */
-  .tl-row--flash {
+  /* Static (non-animated) flash so reduced-motion users still get feedback.
+     !important keeps the flash visible even while the row is hovered (both
+     .drive-row:hover and .tl-row[data-wp]:hover tint the background). */
+  .tl-row--flash,
+  .drive-row--flash {
     animation: none !important;
-    background-color: color-mix(in oklab, var(--accent) 18%, transparent);
+    background-color: color-mix(in oklab, var(--accent) 18%, transparent) !important;
   }
 
   .day-card {

@@ -13,7 +13,8 @@
  *   getActiveDay()                  — currently active day index (canonical owner)
  *   setActiveDay(i)                 — set the active day index (canonical owner)
  *   getEntryRow(dayIndex, entryIndex)   — tl-row element or null
- *   getWaypointIndex(dayIndex, entryIndex) — waypoint index (origin counts as 0)
+ *   getWaypointIndex(dayIndex, entryIndex) — index in the SORTED waypoint
+ *                          sequence (chronological; origin counts as a waypoint)
  *   highlightNow(dayIndex, entryIndex, isGap) — .is-now / .is-next + scroll
  *   updateLegs(dayId, legResults)   — fill drive chip + drive rows for a day
  *   setNowDotOnTab(i)               — pulsing dot on tab i
@@ -120,12 +121,20 @@
     (doc.head || doc.documentElement).appendChild(style);
   }
 
-  /** Find a data leg whose from/to titles match (falls back to "driving"). */
-  function findLeg(day, fromTitle, toTitle) {
+  /**
+   * Find the leg connecting waypoint objects a -> b. Delegates to
+   * TripData.findLeg (exact title match, then coordinate match); falls back to
+   * exact-title-only matching if TripData is unavailable.
+   */
+  function findLeg(day, a, b) {
+    if (win.TripData && typeof win.TripData.findLeg === "function") {
+      return win.TripData.findLeg(day, a, b);
+    }
+    if (!day || !a || !b) return null;
     const legs = day && Array.isArray(day.legs) ? day.legs : [];
     for (let k = 0; k < legs.length; k++) {
       const leg = legs[k];
-      if (leg && leg.from === fromTitle && leg.to === toTitle) return leg;
+      if (leg && leg.from === a.title && leg.to === b.title) return leg;
     }
     return null;
   }
@@ -174,7 +183,10 @@
     return btn;
   }
 
-  /** Ordered timeline: [origin?] + entries, each followed by its drive row. */
+  /** Ordered timeline: every stop rendered chronologically (origin + entries,
+   *  coordless entries included), numbered from the shared sorted waypoint
+   *  sequence (TripData.getWaypoints) so badges, map markers, drive-row
+   *  data-leg indices and maps.js legResults stay in lockstep. */
   function buildTimeline(day, dayIndex) {
     const ol = doc.createElement("ol");
     ol.className = "day-timeline";
@@ -209,22 +221,54 @@
       });
     });
 
-    // The waypoint sequence maps.js actually maps: origin + entries with a
-    // valid coords array (same filter as maps.js). Timeline badges and map
-    // markers are numbered from THIS list, so rows for coordless entries stay
-    // visible but carry no waypoint number — keeping badge/marker numbering
-    // in lockstep for every day.
-    const waypoints = stops.filter(function (wp) {
-      return Array.isArray(wp.coords) && wp.coords.length >= 2;
+    // Sort stops chronologically with the SAME rule as TripData.getWaypoints
+    // ("HH:MM" string compare; missing/empty times sort last) so the visible
+    // rows read in time order on days where the origin departs after an entry
+    // starts (e.g. day-2: 09:00 "Free morning" before 12:00 "Depart").
+    const timeKey =
+      win.TripData && typeof win.TripData.timeKey === "function"
+        ? win.TripData.timeKey
+        : function (t) {
+            const s = String(t == null ? "" : t).trim();
+            return /^\d{1,2}:\d{2}$/.test(s) ? s : "99:99";
+          };
+    const sortedStops = stops.slice().sort(function (a, b) {
+      const ka = timeKey(a.time);
+      const kb = timeKey(b.time);
+      return ka < kb ? -1 : ka > kb ? 1 : 0;
     });
 
-    stops.forEach(function (wp, n) {
+    // The waypoint sequence maps.js actually maps: origin + entries with a
+    // valid coords array, CHRONOLOGICALLY SORTED (same filter & rule as
+    // maps.js via TripData). Timeline badges and map markers are numbered from
+    // THIS list, so rows for coordless entries stay visible but carry no
+    // waypoint number — keeping badge/marker numbering in lockstep for every
+    // day.
+    const waypoints =
+      win.TripData && typeof win.TripData.getWaypoints === "function"
+        ? win.TripData.getWaypoints(day)
+        : stops.filter(function (wp) {
+            return Array.isArray(wp.coords) && wp.coords.length >= 2;
+          });
+
+    // 0-based position of a stop in the sorted waypoint sequence, or -1 when
+    // the stop is not a waypoint (coordless entry). Waypoints are fresh
+    // objects from TripData, so match by kind + entryIdx rather than identity.
+    function waypointIndexOf(stop) {
+      for (let n = 0; n < waypoints.length; n++) {
+        const w = waypoints[n];
+        if (w.kind === stop.kind && w.entryIdx === stop.idx) return n;
+      }
+      return -1;
+    }
+
+    sortedStops.forEach(function (wp) {
       const li = doc.createElement("li");
       li.className = "tl-row" + (wp.alt ? " entry--alt" : "");
-      // Every waypoint row (origin included) carries its 0-based waypoint
-      // index (origin counts as 0) so timeline badges and map markers stay in
+      // Every waypoint row (origin included) carries its 0-based index in the
+      // SORTED waypoint sequence so timeline badges and map markers stay in
       // lockstep with maps.js; non-waypoint rows get no data-wp.
-      const waypointIndex = waypoints.indexOf(wp);
+      const waypointIndex = waypointIndexOf(wp);
       const isWaypoint = waypointIndex !== -1;
       if (isWaypoint) {
         li.setAttribute("data-wp", String(waypointIndex));
@@ -275,17 +319,19 @@
       li.appendChild(body);
       ol.appendChild(li);
 
-      // Drive row between consecutive waypoints (positional: data-leg = gap n,
-      // matching maps.js's legResults index). Pairs that share coordinates get
-      // no row — maps.js reports mode "skip". Coordless stops are not waypoints
-      // and therefore never start or end a drive row.
+      // Drive row between consecutive SORTED waypoints (positional: data-leg =
+      // gap index in the sorted sequence, matching maps.js's legResults index).
+      // Pairs that share coordinates get no row — maps.js reports mode "skip".
+      // Coordless stops are not waypoints and therefore never start or end a
+      // drive row.
       if (
         isWaypoint &&
         waypointIndex < waypoints.length - 1 &&
-        !sameCoordinates(wp, waypoints[waypointIndex + 1])
+        !sameCoordinates(waypoints[waypointIndex], waypoints[waypointIndex + 1])
       ) {
+        const from = waypoints[waypointIndex];
         const next = waypoints[waypointIndex + 1];
-        const leg = findLeg(day, wp.title, next.title);
+        const leg = findLeg(day, from, next);
         const mode = leg && leg.mode ? leg.mode : "driving";
         const dr = doc.createElement("li");
         dr.className = "drive-row";
@@ -293,7 +339,7 @@
         const bodySpan = doc.createElement("span");
         bodySpan.className = "drive-row__body";
         bodySpan.appendChild(svgIcon(legModeIcon(mode), "drive-ico"));
-        bodySpan.appendChild(text(wp.title + " to " + next.title + " · — · —"));
+        bodySpan.appendChild(text(from.title + " to " + next.title + " · — · —"));
         dr.appendChild(bodySpan);
         ol.appendChild(dr);
       }
@@ -422,37 +468,65 @@
   const rowFlashTimers = new WeakMap();
   const ROW_FLASH_MS = 1000;
 
-  /** One-shot visual flash on the clicked row (CSS styles .tl-row--flash). */
-  function flashTimelineRow(row) {
-    row.classList.add("tl-row--flash");
+  /** One-shot visual flash on a clicked row (CSS styles .tl-row--flash and
+   *  .drive-row--flash share the same keyframes). */
+  function flashRow(row, className) {
+    row.classList.add(className);
     const prev = rowFlashTimers.get(row);
     if (prev) clearTimeout(prev);
     rowFlashTimers.set(
       row,
       setTimeout(function () {
-        row.classList.remove("tl-row--flash");
+        row.classList.remove(className);
         rowFlashTimers.delete(row);
       }, ROW_FLASH_MS)
     );
   }
 
+  function flashTimelineRow(row) {
+    flashRow(row, "tl-row--flash");
+  }
+
+  function flashDriveRow(row) {
+    flashRow(row, "drive-row--flash");
+  }
+
   /**
-   * Delegated click: a stop row pans its day's map to that waypoint's marker
-   * (maps.js api.panTo) and flashes the row. Drive rows and non-waypoint
-   * clicks are ignored; a missing/unready map api is a silent no-op.
+   * Delegated click:
+   * - a stop row pans its day's map to that waypoint's marker (maps.js panTo)
+   *   and flashes the row;
+   * - a drive row zooms its day's map to fit that leg's two waypoints
+   *   (maps.js fitLeg) and flashes the row.
+   * Non-waypoint / unready-map cases are silent no-ops.
    */
   function onTimelineClick(event) {
     const target = event.target;
     if (!target || typeof target.closest !== "function") return;
     if (target.closest("a")) return; // never intercept link clicks inside rows
-    const row = target.closest(".tl-row");
-    if (!row) return;
-    const raw = row.getAttribute("data-wp");
-    if (raw === null || raw === "") return; // no waypoint (drive rows)
-    const panel = row.closest(".day-card");
+
+    const panel = target.closest(".day-card");
     const dayIndex = panel ? panelEls.indexOf(panel) : -1;
     if (dayIndex < 0) return;
     const api = mapApis.get(dayIndex);
+
+    // Drive rows (data-leg = sorted gap index) zoom the map to that leg.
+    const driveRow = target.closest(".drive-row");
+    if (driveRow) {
+      const raw = driveRow.getAttribute("data-leg");
+      if (raw === null || raw === "") return;
+      if (api && typeof api.fitLeg === "function") {
+        try {
+          api.fitLeg(Number(raw));
+        } catch (err) { /* map hidden / not ready — non-fatal */ }
+      }
+      flashDriveRow(driveRow);
+      return;
+    }
+
+    const row = target.closest(".tl-row");
+    if (!row) return;
+    const raw = row.getAttribute("data-wp");
+    if (raw === null || raw === "") return; // no waypoint
     if (api && typeof api.panTo === "function") {
       try {
         api.panTo(Number(raw));
@@ -513,10 +587,22 @@
     return panel.querySelector('.tl-row[data-entry="' + dayIndex + ":" + entryIndex + '"]') || null;
   }
 
+  /** Sorted waypoint index of an entry (0-based, origin counts as a waypoint),
+   *  or -1 when the entry has no waypoint / the day is unknown. Mirrors the
+   *  sorted sequence used for timeline badges, map markers and leg indices. */
   function getWaypointIndex(dayIndex, entryIndex) {
     const day = days[dayIndex];
-    if (!day) return -1;
-    return (day.origin ? 1 : 0) + entryIndex;
+    if (!day || !Number.isInteger(entryIndex) || entryIndex < 0) return -1;
+    const waypoints =
+      win.TripData && typeof win.TripData.getWaypoints === "function"
+        ? win.TripData.getWaypoints(day)
+        : [];
+    for (let n = 0; n < waypoints.length; n++) {
+      if (waypoints[n].kind === "entry" && waypoints[n].entryIdx === entryIndex) {
+        return n;
+      }
+    }
+    return -1;
   }
 
   function clearNowHighlight() {
