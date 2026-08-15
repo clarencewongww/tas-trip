@@ -1031,6 +1031,51 @@ img, svg {
   color: var(--brand-strong);
 }
 
+/* Basemap switcher (maps.js) — compact top-right pill cluster on each day map.
+   Leaflet's default placement puts it in the top-right corner; the zoom
+   control stays top-left and the attribution bottom-right, so nothing
+   overlaps. Tokens adapt to light/dark/auto. */
+.basemap-switch {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--surface-2) 88%, transparent);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.basemap-switch__btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.72rem;
+  line-height: 1;
+  height: 28px;
+  min-width: 40px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+
+.basemap-switch__btn:hover {
+  color: var(--brand-strong);
+}
+
+.basemap-switch__btn.is-active,
+.basemap-switch__btn[aria-pressed="true"] {
+  background: var(--brand);
+  color: var(--surface);
+}
+
+.basemap-switch__btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 /* ---------------------------------------------------------------------
    Trip markers (Leaflet divIcons). CSS owns the whole look — markers.js
    only supplies the class names and iconSize. Width/height are set inline

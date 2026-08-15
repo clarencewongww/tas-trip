@@ -492,11 +492,37 @@
   }
 
   /**
+   * After a pan/fit interaction, make sure the day's map is actually visible.
+   * Mobile stacks the map BELOW the timeline, so a tap on a stop/drive row
+   * would otherwise pan/zoom a map that's off-screen. Desktop keeps the map
+   * sticky and always on-screen, where the visibility guard below makes this a
+   * no-op. Respects prefers-reduced-motion.
+   */
+  function scrollDayMapIntoView(panel) {
+    if (!panel || typeof panel.querySelector !== "function") return;
+    const mapEl = panel.querySelector(".day-map"); // .day-map IS the Leaflet container
+    if (!mapEl || typeof mapEl.getBoundingClientRect !== "function") return;
+    const rect = mapEl.getBoundingClientRect();
+    const vh = typeof win.innerHeight === "number" ? win.innerHeight : 0;
+    if (vh <= 0) return; // page hidden — nothing to bring into view
+    const TOLERANCE = 12; // allow the map to poke out of the fold slightly
+    if (rect.top < -TOLERANCE || rect.bottom > vh + TOLERANCE) {
+      const behavior = reducedMotion() ? "auto" : "smooth";
+      try {
+        mapEl.scrollIntoView({ behavior: behavior, block: "center" });
+      } catch (err) {
+        mapEl.scrollIntoView();
+      }
+    }
+  }
+
+  /**
    * Delegated click:
    * - a stop row pans its day's map to that waypoint's marker (maps.js panTo)
    *   and flashes the row;
    * - a drive row zooms its day's map to fit that leg's two waypoints
    *   (maps.js fitLeg) and flashes the row.
+   * Both branches then scroll the day's map into view if it's off-screen.
    * Non-waypoint / unready-map cases are silent no-ops.
    */
   function onTimelineClick(event) {
@@ -519,6 +545,7 @@
           api.fitLeg(Number(raw));
         } catch (err) { /* map hidden / not ready — non-fatal */ }
       }
+      scrollDayMapIntoView(panel);
       flashDriveRow(driveRow);
       return;
     }
@@ -532,6 +559,7 @@
         api.panTo(Number(raw));
       } catch (err) { /* map hidden / not ready — non-fatal */ }
     }
+    scrollDayMapIntoView(panel);
     flashTimelineRow(row);
   }
 

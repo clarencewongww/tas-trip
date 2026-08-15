@@ -21,12 +21,13 @@ window.TRIP = {
       entries: [
         { start: "10:15", end: "15:00", title: "Layover — Melbourne Airport (MEL)", place: "Melbourne Airport", coords: [-37.6733, 144.8433], kind: "flight", note: "Overnight flight arrives; long transit" },
         { start: "16:50", end: "18:10", title: "Flight Melbourne → Hobart", place: "Hobart Airport (HBA)", coords: [-42.836, 147.51], kind: "flight" },
-        { start: "18:10", end: "18:45", title: "Collect car — Hobart Airport (HBA)", place: "Hobart Airport (HBA)", coords: [-42.836, 147.51], kind: "transit" },
+        { start: "18:10", end: "18:45", title: "Collect car — Yes Car", place: "4b/1 Stanton Pl, Cambridge TAS 7170", coords: [-42.8331, 147.4635], kind: "transit" },
         { start: "19:15", end: "23:59", title: "Check in — Riverfront Motel & Restaurant", place: "Riverfront Motel & Restaurant, Hobart", coords: [-42.8321, 147.2907], kind: "lodging" }
       ],
       legs: [
         { from: "Layover — Melbourne Airport (MEL)", to: "Flight Melbourne → Hobart", mode: "flight", fallbackMin: 80 },
-        { from: "Collect car — Hobart Airport (HBA)", to: "Check in — Riverfront Motel & Restaurant", mode: "driving", fallbackKm: 19, fallbackMin: 25 }
+        { from: "Flight Melbourne → Hobart", to: "Collect car — Yes Car", mode: "driving", fallbackKm: 5, fallbackMin: 10 },
+        { from: "Collect car — Yes Car", to: "Check in — Riverfront Motel & Restaurant", mode: "driving", fallbackKm: 19, fallbackMin: 25 }
       ]
     },
     {
@@ -35,22 +36,22 @@ window.TRIP = {
       label: "Sun 15 Nov",
       title: "Hobart to Swansea",
       town: "Swansea",
-      hotel: "Swansea — TBC",
-      hotelNote: "Hotel to be confirmed",
+      hotel: "Airbnb",
+      hotelNote: "2/7 Amos Place",
       origin: { title: "Depart — Riverfront Motel", coords: [-42.8321, 147.2907], departTime: "08:15" },
       entries: [
         { start: "08:30", end: "10:30", title: "Farm Gate Market", place: "Bathurst St, Hobart", coords: [-42.8793, 147.3255], kind: "market", note: "Opens 8:30 am" },
         { start: "12:15", end: "12:35", title: "Maingon Bay Lookout", place: "Tasman Peninsula", coords: [-43.093, 147.926], kind: "lookout", note: "Coastal lookout near Port Arthur" },
-        { start: "13:00", end: "15:30", title: "Port Arthur Historic Site", place: "Port Arthur", coords: [-43.149, 147.8505], kind: "historic", note: "Allow ~2.5 h; tickets at gate" },
-        { start: "15:30", end: "16:15", title: "Port Arthur Lavender", place: "Port Arthur", coords: [-43.1525, 147.8555], kind: "lavender", note: "Right next door — lavender fields & café" },
-        { start: "18:15", end: "23:59", title: "Check in — Swansea (hotel TBC)", place: "Swansea", coords: [-42.126, 148.072], kind: "lodging" }
+        { start: "13:00", end: "15:30", title: "Port Arthur Historic Site", place: "Port Arthur", coords: [-43.1477, 147.8513], kind: "historic", note: "Allow ~2.5 h; tickets at gate" },
+        { start: "15:30", end: "16:15", title: "Port Arthur Lavender", place: "Port Arthur", coords: [-43.1071, 147.8632], kind: "lavender", note: "Lavender fields & café on Arthur Hwy" },
+        { start: "18:15", end: "23:59", title: "Check in — Airbnb", place: "2/7 Amos Place, Swansea", coords: [-42.1226, 148.0702], kind: "lodging" }
       ],
       legs: [
         { from: "Depart — Riverfront Motel", to: "Farm Gate Market", mode: "driving", fallbackKm: 6, fallbackMin: 10 },
         { from: "Farm Gate Market", to: "Maingon Bay Lookout", mode: "driving", fallbackKm: 103, fallbackMin: 110 },
         { from: "Maingon Bay Lookout", to: "Port Arthur Historic Site", mode: "driving", fallbackKm: 12, fallbackMin: 15 },
-        { from: "Port Arthur Historic Site", to: "Port Arthur Lavender", mode: "driving", fallbackKm: 2, fallbackMin: 5 },
-        { from: "Port Arthur Lavender", to: "Check in — Swansea (hotel TBC)", mode: "driving", fallbackKm: 152, fallbackMin: 120 }
+        { from: "Port Arthur Historic Site", to: "Port Arthur Lavender", mode: "driving", fallbackKm: 6, fallbackMin: 8 },
+        { from: "Port Arthur Lavender", to: "Check in — Airbnb", mode: "driving", fallbackKm: 152, fallbackMin: 120 }
       ]
     },
     {
@@ -60,20 +61,20 @@ window.TRIP = {
       title: "Swansea to St Helens",
       town: "St Helens",
       hotel: "St Helens — TBC",
-      origin: { title: "Depart — Swansea", coords: [-42.126, 148.072], departTime: "12:00" },
+      origin: { title: "Depart — Swansea", coords: [-42.1226, 148.0702], departTime: "12:00" },
       entries: [
-        { start: "09:00", end: "12:00", title: "Free morning — Swansea", place: "Swansea", coords: [-42.126, 148.072], kind: "free", note: "Lazy morning & breakfast" },
+        { start: "09:00", end: "12:00", title: "Free morning — Swansea", place: "Swansea", coords: [-42.1226, 148.0702], kind: "free", note: "Lazy morning & breakfast" },
         { start: "13:00", end: "15:30", title: "Wineglass Bay lookout walk", place: "Freycinet NP car park", coords: [-42.1365, 148.303], kind: "hike", note: "~1.5–2 h return to the lookout" },
         { start: "15:30", end: "16:00", title: "Cape Tourville Lighthouse", place: "Freycinet NP", coords: [-42.115, 148.339], kind: "lookout", note: "Easy 600 m boardwalk" },
-        { start: "16:10", end: "16:50", title: "Honeymoon Bay", place: "Coles Bay", coords: [-42.1295, 148.2805], kind: "beach", note: "Quiet cove near Coles Bay" },
-        { start: "17:00", end: "18:15", title: "Freycinet Marine Farm — seafood dinner", place: "Freycinet Marine Farm", coords: [-42.1355, 148.2665], kind: "food", note: "Fresh oysters & mussels" },
+        { start: "16:10", end: "16:50", title: "Honeymoon Bay", place: "Coles Bay", coords: [-42.1381, 148.2986], kind: "beach", note: "Quiet cove near Coles Bay" },
+        { start: "17:00", end: "18:15", title: "Freycinet Marine Farm — seafood dinner", place: "Freycinet Marine Farm", coords: [-42.0746, 148.2329], kind: "food", note: "Fresh oysters & mussels" },
         { start: "20:00", end: "23:59", title: "Check in — St Helens (hotel TBC)", place: "St Helens", coords: [-41.3205, 148.247], kind: "lodging" }
       ],
       legs: [
         { from: "Free morning — Swansea", to: "Wineglass Bay lookout walk", mode: "driving", fallbackKm: 50, fallbackMin: 50 },
         { from: "Wineglass Bay lookout walk", to: "Cape Tourville Lighthouse", mode: "driving", fallbackKm: 9, fallbackMin: 15 },
         { from: "Cape Tourville Lighthouse", to: "Honeymoon Bay", mode: "driving", fallbackKm: 6, fallbackMin: 10 },
-        { from: "Honeymoon Bay", to: "Freycinet Marine Farm — seafood dinner", mode: "driving", fallbackKm: 2, fallbackMin: 5 },
+        { from: "Honeymoon Bay", to: "Freycinet Marine Farm — seafood dinner", mode: "driving", fallbackKm: 27, fallbackMin: 25 },
         { from: "Freycinet Marine Farm — seafood dinner", to: "Check in — St Helens (hotel TBC)", mode: "driving", fallbackKm: 110, fallbackMin: 100 }
       ]
     },

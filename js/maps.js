@@ -17,7 +17,7 @@
  *   legResults: Array<{ from, to, km, min, mode, source }>
  *   getLegResults(), highlight(i), panTo(i), fitLeg(i),
  *   addUserMarker(latlng, accuracy?), fitUser(), invalidateSize(), destroy(),
- *   setTheme(mode)
+ *   setTheme(mode), setBase(mode)
  */
 (function (global) {
   if (typeof global === "undefined" || typeof global.window === "undefined") return;
@@ -51,7 +51,32 @@
   // ------------------------------------------------------------------
   // Shared state
   // ------------------------------------------------------------------
-  const activeMaps = new Set(); // entries: { applyTheme, invalidateSize } for live maps
+  const activeMaps = new Set(); // entries: { applyTheme, setBase, invalidateSize } for live maps
+
+  // Basemap preference: "map" (theme-aware CARTO/OSM), "sat" (Esri World
+  // Imagery) or "osm" (OpenStreetMap standard). Shared across every live day
+  // map, persisted under "tas-trip-basemap" so the choice survives day
+  // switches and reloads. Storage failures (e.g. file:// with storage
+  // disabled) fall back to "map".
+  const BASE_STORAGE_KEY = "tas-trip-basemap";
+  const BASE_MODES = ["map", "sat", "osm"];
+  let currentBase = "map";
+
+  function readBasePreference() {
+    try {
+      const v = win.localStorage.getItem(BASE_STORAGE_KEY);
+      if (v === "map" || v === "sat" || v === "osm") return v;
+    } catch (err) { /* storage unavailable — fall back to "map" */ }
+    return "map";
+  }
+
+  function persistBase(mode) {
+    try {
+      win.localStorage.setItem(BASE_STORAGE_KEY, mode);
+    } catch (err) { /* storage unavailable — preference is best-effort */ }
+  }
+
+  currentBase = readBasePreference();
   let osrmNextStart = Promise.resolve(); // resolves when the next OSRM request may start
   let osrmActive = 0; // OSRM requests currently in flight
   let osrmSlotWaiters = []; // resolvers queued for a free OSRM concurrency slot
@@ -87,6 +112,36 @@
         : "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       { attribution: TILE_ATTRIBUTION, maxZoom: 19 }
     );
+  }
+
+  const ESRI_SAT_ATTRIBUTION =
+    "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics";
+  const OSM_STANDARD_ATTRIBUTION = "© OpenStreetMap contributors";
+
+  /** Basemap factory. "map" keeps the existing theme-aware layer (CARTO dark /
+   *  OSM light via createTileLayer); "sat" is Esri World Imagery; "osm" is the
+   *  standard OpenStreetMap layer. */
+  function createBaseLayer(base, theme) {
+    if (base === "sat") {
+      return L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        { maxZoom: 19, attribution: ESRI_SAT_ATTRIBUTION }
+      );
+    }
+    if (base === "osm") {
+      return L.tileLayer(
+        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { maxZoom: 19, attribution: OSM_STANDARD_ATTRIBUTION }
+      );
+    }
+    return createTileLayer(theme);
+  }
+
+  /** Which scheme route halos should follow. Satellite imagery is always
+   *  light, so a dark-mode white halo would read as an inverted outline
+   *  there — treat "sat" as "light" for route styling only. */
+  function routeTheme() {
+    return currentBase === "sat" ? "light" : effectiveTheme();
   }
 
   // ------------------------------------------------------------------
@@ -327,7 +382,8 @@
     fitUser: function () {},
     invalidateSize: function () {},
     destroy: function () {},
-    setTheme: function () {}
+    setTheme: function () {},
+    setBase: function () {}
   };
 
   // ------------------------------------------------------------------
@@ -352,6 +408,59 @@
       win.removeEventListener("themechange", onThemeChange);
       themeListenerAttached = false;
     }
+  }
+
+  // ------------------------------------------------------------------
+  // Basemap switching — shared across every live day map
+  // ------------------------------------------------------------------
+  /** Switch the basemap on ALL live maps ("map" | "sat" | "osm"), persist the
+   *  choice, and keep every switcher control's active button in sync. New maps
+   *  initialized later read the (already-updated) module-level currentBase. */
+  function setBaseAll(mode) {
+    if (mode !== "map" && mode !== "sat" && mode !== "osm") return;
+    currentBase = mode;
+    persistBase(mode);
+    activeMaps.forEach(function (entry) {
+      if (entry && typeof entry.setBase === "function") entry.setBase(mode);
+    });
+  }
+
+  /** Build a compact top-right basemap switcher for one map: three buttons
+   *  (Map / Sat / OSM). `onSelect(mode)` fires on click; `update(mode)` syncs
+   *  the active button and its aria-pressed state. */
+  function buildBaseSwitcher(map, onSelect) {
+    const container = L.DomUtil.create("div", "basemap-switch leaflet-control");
+    container.setAttribute("role", "group");
+    container.setAttribute("aria-label", "Basemap");
+    const labels = { map: "Map", sat: "Sat", osm: "OSM" };
+    const buttons = {};
+    BASE_MODES.forEach(function (mode) {
+      const btn = L.DomUtil.create("button", "basemap-switch__btn", container);
+      btn.type = "button";
+      btn.textContent = labels[mode];
+      btn.setAttribute("aria-pressed", "false");
+      btn.title = "Use " + labels[mode] + " basemap";
+      btn.addEventListener("click", function () {
+        onSelect(mode);
+      });
+      buttons[mode] = btn;
+    });
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.disableScrollPropagation(container);
+
+    function update(mode) {
+      BASE_MODES.forEach(function (m) {
+        const active = m === mode;
+        buttons[m].classList.toggle("is-active", active);
+        buttons[m].setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+
+    const control = L.control({ position: "topright" });
+    control.onAdd = function () {
+      return container;
+    };
+    return { control: control, update: update };
   }
 
   // ------------------------------------------------------------------
@@ -451,8 +560,9 @@
       }
     }
 
-    // Tiles (theme-aware; re-applied on "themechange" / setTheme).
-    tileLayer = createTileLayer(effectiveTheme());
+    // Tiles (base-aware; theme-aware for the "map" base; re-applied on
+    // "themechange" / setTheme / setBase).
+    tileLayer = createBaseLayer(currentBase, effectiveTheme());
     tileLayer.addTo(map);
 
     // Numbered markers + popups (DOM built with textContent — no HTML string
@@ -521,6 +631,14 @@
     // Scale control (nice for a driving itinerary).
     L.control.scale({ imperial: false }).addTo(map);
 
+    // Basemap switcher (top-right): Map / Sat / OSM. Clicking a button swaps
+    // the basemap on every live day map and persists the preference.
+    const switcher = buildBaseSwitcher(map, function (mode) {
+      setBaseAll(mode);
+    });
+    switcher.control.addTo(map);
+    switcher.update(currentBase);
+
     // Leg results are collected here; slots keep itinerary order even though
     // driving legs resolve asynchronously. Exposed live on the api.
     const legResults = new Array(Math.max(0, waypoints.length - 1)).fill(null);
@@ -553,7 +671,7 @@
     function addRouteLine(latlngs, style) {
       if (destroyed || !style) return null;
       const layers = [];
-      const dark = effectiveTheme() === "dark";
+      const dark = routeTheme() === "dark";
       if (dark) {
         layers.push(
           L.polyline(latlngs, {
@@ -702,14 +820,14 @@
       }
     });
 
-    function applyTheme(themeArg) {
-      if (destroyed) return;
-      const theme = themeArg === "dark" || themeArg === "light" ? themeArg : effectiveTheme();
+    /** Remove the current tile layer and add a fresh one for `base` at
+     *  `theme` (the "map" base is theme-aware; sat/osm ignore the theme). */
+    function replaceTileLayer(base, theme) {
       if (tileLayer) {
         map.removeLayer(tileLayer);
         tileLayer = null;
       }
-      tileLayer = createTileLayer(theme);
+      tileLayer = createBaseLayer(base, theme);
       tileLayer.addTo(map);
       // Marker borders need no JS: CSS [data-theme="dark"] / @media auto rules
       // handle the 3px dark-mode border reactively.
@@ -719,8 +837,27 @@
       } catch (err) { /* ignore */ }
     }
 
+    function applyTheme(themeArg) {
+      if (destroyed) return;
+      // Satellite / OSM layers don't depend on the theme — only the
+      // theme-aware "map" base is swapped on "themechange" / setTheme.
+      if (currentBase !== "map") return;
+      const theme = themeArg === "dark" || themeArg === "light" ? themeArg : effectiveTheme();
+      replaceTileLayer("map", theme);
+    }
+
+    /** Per-map basemap swap (also invoked via setBaseAll on every live map and
+     *  exposed as api.setBase). Keeps this map's switcher button in sync. */
+    function setBase(mode) {
+      if (destroyed) return;
+      if (mode !== "map" && mode !== "sat" && mode !== "osm") return;
+      replaceTileLayer(mode, effectiveTheme());
+      if (switcher) switcher.update(mode);
+    }
+
     const themeEntry = {
       applyTheme: applyTheme,
+      setBase: setBase,
       invalidateSize: function () {
         if (destroyed) return;
         try {
@@ -862,6 +999,10 @@
 
       setTheme: function (mode) {
         applyTheme(mode);
+      },
+
+      setBase: function (mode) {
+        setBase(mode);
       },
 
       destroy: function () {
