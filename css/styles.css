@@ -1,5 +1,5 @@
 /* =====================================================================
-   TasRoad — static stylesheet (vanilla CSS, no build step).
+   Tasmania Trip — static stylesheet (vanilla CSS, no build step).
    Design tokens first, then layout, components, Leaflet, motion,
    responsive and print rules.
    ===================================================================== */
@@ -1190,8 +1190,82 @@ img, svg {
 }
 
 @media (min-width: 1024px) {
+  /* Desktop: timeline in the left column, map in the right column. The map is
+     sticky so it stays in view while the timeline scrolls. --map-offset clears
+     the sticky now-rail (#now-bar) plus a 12px gap so the map never slides
+     underneath it. (The .topbar is position: relative inside the scrolling
+     hero — the now-rail is the element actually pinned to the top during
+     day-card scroll, and its height varies with viewport width, so the offset
+     is tiered below.) */
+  .day-card {
+    /* Tier 1 (1024–1079px): the now-rail controls wrap onto more lines there,
+       so the rail is ~177px tall. */
+    --map-offset: 189px;
+
+    display: grid;
+    /* Slightly wider timeline column than map (1.1fr vs 1fr) so stop titles
+       like "Check in — Riverfront Motel & Restaurant" fit on one line. */
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    column-gap: 24px; /* horizontal gap between timeline and map columns */
+    row-gap: 0;       /* the header's border-bottom already divides the rows */
+  }
+
+  /* Restore the UA [hidden] rule that an author display: grid would otherwise
+     override — inactive day panels must stay hidden on desktop too. */
+  .day-card[hidden] {
+    display: none;
+  }
+
+  .day-card__header {
+    grid-column: 1 / -1;
+  }
+
+  .day-note {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 16px 32px 0; /* align with the timeline's horizontal inset */
+  }
+
   .day-timeline {
-    padding: 16px 32px 32px;
+    grid-column: 1;
+    min-width: 0; /* let the timeline column shrink inside the grid */
+    /* Right padding drops to 0 in the grid: the 24px column gap already
+       separates the timeline from the map, and the freed width keeps stop
+       titles on one line. Left stays 32px so the --tl-icon-x geometry
+       (106px) keeps matching the timeline rows. */
+    padding: 16px 0 32px 32px;
+  }
+
+  /* .day-map IS the Leaflet container (render.js appends it directly — there
+     is no separate wrapper element), so it takes on the sticky + fixed-height
+     roles itself. position: sticky is a positioned element, so Leaflet's
+     absolutely-positioned panes anchor to it exactly as they did to the base
+     position: relative. The viewport-derived height gives Leaflet the explicit
+     pixel height it needs; the bottom corners stay rounded via the base rule. */
+  .day-map {
+    grid-column: 2;
+    position: sticky;
+    top: var(--map-offset);
+    align-self: start;
+    height: calc(100vh - var(--map-offset) - 36px); /* 100vh - rail height - 48px */
+    min-height: 480px;
+    border-top: none; /* the header's border-bottom already divides the columns */
+  }
+}
+
+/* Sticky-map offset tiers (see --map-offset above). The now-rail height is
+   width-dependent, so the map clears it by 12px at every desktop width:
+   Tier 1 1024–1079px → rail ≈177px; Tier 2 1080–1799px → rail ≈143px
+   (measured normal + preview states); Tier 3 ≥1800px → rail ≈112–127px. */
+@media (min-width: 1080px) {
+  .day-card {
+    --map-offset: 155px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .day-card {
+    --map-offset: 139px;
   }
 }
 

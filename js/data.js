@@ -2,7 +2,7 @@
 "use strict";
 
 window.TRIP = {
-  name: "TasRoad",
+  name: "Tasmania Trip",
   subtitle: "Tasmania road trip · 13–21 Nov 2026",
   tz: "Australia/Hobart",
   startISO: "2026-11-13T23:40:00+11:00",

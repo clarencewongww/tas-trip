@@ -1,4 +1,4 @@
-# TasRoad — Tasmania Road Trip Itinerary
+# Tasmania Trip — Tasmania Road Trip Itinerary
 
 A static, dependency-free web app for the **Tasmania road trip · 13–21 Nov 2026**. Plain JavaScript — no build step, no frameworks, no installation required.
 

@@ -1,4 +1,4 @@
-/* TripLocate — "Locate me" geolocation feature for the TasRoad itinerary.
+/* TripLocate — "Locate me" geolocation feature for the Tasmania Trip itinerary.
  *
  * Consumes window.TripGeo (js/geo.js), window.TripTimeline (js/timeline.js),
  * window.TripRender (js/render.js) and window.TripMaps (js/maps.js) — all
@@ -226,7 +226,7 @@
 
     const privacy = doc.createElement("span");
     privacy.className = "locate-privacy";
-    privacy.textContent = "Your location stays on your device — coordinates are sent only to the OSRM routing service to calculate a route and are never stored.";
+    privacy.textContent = "Location stays on your device and is never stored.";
     readout.parentNode.insertBefore(privacy, readout.nextSibling);
   }
 
