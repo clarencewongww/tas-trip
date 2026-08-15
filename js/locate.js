@@ -23,6 +23,10 @@
 
   const doc = global.document;
 
+  // Guard so the document-level tooltip listener is attached at most once,
+  // even if init() runs again.
+  let privacyBound = false;
+
   function getEl(id) {
     return doc.getElementById(id);
   }
@@ -214,6 +218,31 @@
    *   privacy sentence so the text lives in one place (JS-authoritative).
    */
   function init() {
+    // Privacy ⓘ tooltip (independent of the geolocation button): on touch
+    // devices the bubble is revealed by CSS `:focus-within`, but tapping a
+    // non-focusable area never blurs the button, so the bubble stays open.
+    // Close it explicitly whenever the user interacts anywhere outside the
+    // `.privacy` wrapper. pointerdown fires before focus changes (touch +
+    // mouse); click is a fallback for browsers without PointerEvent. blur()
+    // only drops focus — desktop CSS `:hover` still shows the bubble.
+    const privacyBtn = getEl("privacy-btn");
+    const privacyWrap = privacyBtn && typeof privacyBtn.closest === "function"
+      ? privacyBtn.closest(".privacy")
+      : null;
+    if (privacyBtn && privacyWrap && !privacyBound) {
+      privacyBound = true;
+      const closeOnOutside = function (ev) {
+        const t = ev && ev.target;
+        if (!t || typeof t.closest !== "function") return;
+        if (t.closest(".privacy")) return; // interaction inside the wrapper
+        privacyBtn.blur();
+      };
+      if (typeof doc.addEventListener === "function") {
+        doc.addEventListener("pointerdown", closeOnOutside);
+        doc.addEventListener("click", closeOnOutside);
+      }
+    }
+
     const btn = getEl("locate-btn");
     const readout = getEl("locate-readout");
     if (!btn || !readout) return;

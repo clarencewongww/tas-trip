@@ -36,8 +36,8 @@ window.TRIP = {
       label: "Sun 15 Nov",
       title: "Hobart to Swansea",
       town: "Swansea",
-      hotel: "Airbnb",
-      hotelNote: "2/7 Amos Place",
+      hotel: "2/7 Amos Place",
+      hotelNote: "Airbnb · Swansea",
       origin: { title: "Depart — Riverfront Motel", coords: [-42.8321, 147.2907], departTime: "08:15" },
       entries: [
         { start: "08:30", end: "10:30", title: "Farm Gate Market", place: "Bathurst St, Hobart", coords: [-42.8793, 147.3255], kind: "market", note: "Opens 8:30 am" },
@@ -60,8 +60,8 @@ window.TRIP = {
       label: "Mon 16 Nov",
       title: "Swansea to Scamander",
       town: "Scamander",
-      hotel: "Jack High — Airbnb",
-      hotelNote: "13 Wigram St, Scamander",
+      hotel: "Jack High",
+      hotelNote: "Airbnb · 13 Wigram St, Scamander",
       origin: { title: "Depart — Swansea", coords: [-42.1226, 148.0702], departTime: "12:00" },
       entries: [
         { start: "09:00", end: "12:00", title: "Free morning — Swansea", place: "Swansea", coords: [-42.1226, 148.0702], kind: "free", note: "Lazy morning & breakfast" },

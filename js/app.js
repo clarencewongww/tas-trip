@@ -87,6 +87,24 @@
     }
   }
 
+  /**
+   * Format a pre-trip millisecond offset as "Nd Nh Nm Ns" with 2-digit
+   * seconds (e.g. "89d 16h 21m 08s"). Shared by the 30 s engine tick and
+   * the dedicated 1 s countdown tick so the format never diverges.
+   */
+  function formatCountdown(diffMs) {
+    const MS_SEC = 1000;
+    const MS_MIN = 60 * MS_SEC;
+    const MS_HOUR = 60 * MS_MIN;
+    const MS_DAY = 24 * MS_HOUR;
+    const diff = Math.max(0, diffMs);
+    const d = Math.floor(diff / MS_DAY);
+    const h = Math.floor((diff % MS_DAY) / MS_HOUR);
+    const m = Math.floor((diff % MS_HOUR) / MS_MIN);
+    const s = Math.floor((diff % MS_MIN) / MS_SEC);
+    return d + "d " + h + "h " + m + "m " + (s < 10 ? "0" + s : String(s)) + "s";
+  }
+
   /** Guarded call into TripRender (failures must never break the app). */
   function callRender(method, args) {
     if (!global.TripRender || typeof global.TripRender[method] !== "function") return;
@@ -110,12 +128,14 @@
   // ------------------------------------------------------------------
   function setReadouts(st) {
     if (st.phase === "pre") {
-      const c = st.countdown || { d: 0, h: 0, m: 0 };
       // Hero shows only the live countdown value — the "Trip starts in" label
       // is static markup in index.html. Skip it while previewing so the hero
       // never reflects scrubbed (non-live) times.
       if (previewTime === null) {
-        heroNow.textContent = c.d + "d " + c.h + "h " + c.m + "m";
+        const startMs = global.TRIP && global.TRIP.startISO
+          ? Date.parse(global.TRIP.startISO)
+          : NaN;
+        heroNow.textContent = formatCountdown(isFinite(startMs) ? startMs - Date.now() : 0);
       }
       nowReadout.textContent = "Tasmania awaits";
       nowSub.textContent = fmt(global.TRIP.startISO) + " → " + fmt(global.TRIP.endISO);
@@ -232,6 +252,25 @@
         applyHighlights(st); // the day's map initializes on activateDay — re-apply
       }
     }
+  }
+
+  /**
+   * Live hero countdown, re-run every second. The main engine tick runs on a
+   * 30 s interval (readouts, progress, map highlights) and must not be sped
+   * up; only the hero countdown needs per-second resolution. Reuses
+   * updateHero() so the hide-when-trip-started behaviour is identical and
+   * stops touching the countdown once the hero is gone. Skipped while
+   * scrubbing so the hero never reflects preview (non-live) times.
+   */
+  function tickCountdown() {
+    if (previewTime !== null) return;
+    if (!hero || !heroNow) return;
+    if (updateHero()) return; // trip started → hero hidden, no churn
+
+    const trip = global.TRIP;
+    const startMs = trip && trip.startISO ? Date.parse(trip.startISO) : NaN;
+    if (!isFinite(startMs)) return;
+    heroNow.textContent = formatCountdown(startMs - Date.now());
   }
 
   // ------------------------------------------------------------------
@@ -419,12 +458,18 @@
       global.setInterval(function () { tick(); }, 30000);
     } catch (err) { warn("setInterval failed — live engine will not auto-run."); }
 
+    // Hero countdown ticks every second (independent of the 30 s engine).
+    try {
+      global.setInterval(function () { tickCountdown(); }, 1000);
+    } catch (err) { warn("setInterval failed — hero countdown will not auto-run."); }
+
     if (typeof doc.addEventListener === "function") {
       doc.addEventListener("visibilitychange", onVisibility);
     }
 
     inited = true;
     tick();
+    tickCountdown(); // write the seconds format immediately (tick() runs first)
   }
 
   // ------------------------------------------------------------------

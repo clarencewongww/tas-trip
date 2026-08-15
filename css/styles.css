@@ -190,7 +190,10 @@ img, svg {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 24px;
+  /* Top padding trimmed (16→12px) so the brand text lands in the ~20–28px
+     zone once the hero's top padding is reduced; bottom padding unchanged so
+     the divider keeps its breathing room. */
+  padding: 12px 24px 16px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
@@ -230,7 +233,14 @@ img, svg {
    --------------------------------------------------------------------- */
 .hero {
   position: relative;
-  padding: 72px 24px 56px;
+  /* The .topbar lives INSIDE this section, so this top padding is the gap
+     above the brand (was 72px → ~88px to the brand text). A small base plus
+     the notch safe-area inset keeps the brand ~20–28px from the viewport top
+     on phones without the old oversized gap; the second declaration is the
+     safe-area-aware override for browsers that support env(). Bottom padding
+     trimmed 56→40px so the shorter hero doesn't grow the page. */
+  padding: 10px 24px 40px;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 24px 40px;
   overflow: hidden;
 }
 
@@ -264,7 +274,9 @@ img, svg {
   position: relative;
   z-index: 1;
   max-width: 1120px;
-  margin: 0 auto;
+  /* Top margin creates the ~40px gap between the top bar's bottom edge and
+     the "Trip starts in" label (was 0px — flush and cramped). */
+  margin: 40px auto 0;
 }
 
 .hero-countdown {
@@ -1477,6 +1489,29 @@ img, svg {
    no longer sits alone on its own line. Also compact the whole rail so it
    stops eating vertical space on phones. */
 @media (max-width: 767px) {
+  /* Mobile topbar: keep "Tasmania Trip" on one line and slim the brand/dates
+     so the theme toggle stays fully visible at 375–414px. The unbroken label
+     used to wrap into two lines (inflating the header) and, with nowrap alone,
+     the theme button overflows past the hero's content edge. */
+  .topbar .brand {
+    white-space: nowrap;
+    font-size: 1.1rem;
+  }
+
+  .brand-mark {
+    width: 24px;
+    height: 24px;
+  }
+
+  .topbar {
+    gap: 12px;
+    padding: 12px 20px 16px;
+  }
+
+  .topbar__dates {
+    font-size: 0.8rem;
+  }
+
   .now-rail {
     padding: 6px 16px;
     gap: 4px 16px;
@@ -1549,21 +1584,23 @@ img, svg {
 @media (max-width: 360px) {
   .topbar {
     padding: 12px 16px;
-    gap: 10px;
-  }
-
-  .brand {
-    font-size: 1.1rem;
     gap: 6px;
   }
 
+  /* .topbar .brand matches the ≤767px rule's specificity so this smaller
+     size wins on the narrowest screens. */
+  .topbar .brand {
+    font-size: 0.95rem;
+    gap: 4px;
+  }
+
   .brand-mark {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
 
   .topbar__dates {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
   }
 }
 
