@@ -138,7 +138,12 @@
         heroNow.textContent = formatCountdown(isFinite(startMs) ? startMs - Date.now() : 0);
       }
       nowReadout.textContent = "Tasmania awaits";
-      nowSub.textContent = fmt(global.TRIP.startISO) + " → " + fmt(global.TRIP.endISO);
+      // Rail range: start = flight departure (startISO); end = the LAST trip
+      // day, not endISO (a post-midnight arrival that overruns the calendar).
+      const lastDay = global.TRIP.days[global.TRIP.days.length - 1];
+      nowSub.textContent =
+        fmt(global.TRIP.startISO) + " → " +
+        (lastDay && lastDay.dateISO ? fmt(lastDay.dateISO) : fmt(global.TRIP.endISO));
       return;
     }
 

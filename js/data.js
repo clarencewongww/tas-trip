@@ -159,12 +159,12 @@ window.TRIP = {
       entries: [
         { start: "08:45", end: "09:10", title: "Kettering — Bruny Island ferry", place: "Kettering", coords: [-43.128, 147.2455], kind: "ferry", note: "Car ferry; ~20 min crossing" },
         { start: "09:30", end: "09:55", title: "Bruny Island — Roberts Point", place: "Roberts Point, Bruny Island", coords: [-43.1463, 147.2810], kind: "ferry" },
-        { start: "10:05", end: "11:15", title: "The Neck Lookout Track", place: "Bruny Island", coords: [-43.2575, 147.3515], kind: "lookout", note: "Boardwalk between north & south Bruny" },
+        { start: "10:05", end: "11:15", title: "The Neck Lookout Track", place: "Bruny Island", coords: [-43.2573, 147.353], kind: "lookout", note: "Boardwalk between north & south Bruny" },
         { start: "11:15", end: "13:00", title: "Lunch — Get Shucked (optional)", place: "Get Shucked, Bruny Island", coords: [-43.242, 147.36], kind: "food", alt: true, note: "Famous Bruny oysters" },
         { start: "14:30", end: "14:50", title: "Ferry back — Roberts Point", place: "Roberts Point, Bruny Island", coords: [-43.1463, 147.2810], kind: "ferry" },
         { start: "16:00", end: "17:30", title: "Mount Wellington / kunanyi", place: "Mount Wellington summit", coords: [-42.8961, 147.2377], kind: "lookout", note: "1271 m — rug up!" },
         { start: "17:45", end: "19:30", title: "Dinner — Salamanca (optional)", place: "Salamanca Place, Hobart", coords: [-42.8863, 147.3315], kind: "food", alt: true },
-        { start: "21:10", end: "22:30", title: "Bonorong Wildlife Sanctuary — night tour", place: "Bonorong Wildlife Sanctuary", coords: [-42.7075, 147.2635], kind: "park", note: "Spot devils & quolls at night" },
+        { start: "19:45", end: "21:30", title: "Constitution Dock twilight walk & ice-cream punt (optional)", place: "Van Diemens Land Creamery, Constitution Dock", coords: [-42.8826, 147.3331], kind: "food", alt: true, note: "Floating ice-cream punt open till 9pm Fridays · sunset over the Derwent ~20:10" },
         { start: "23:00", end: "23:59", title: "Back to Travelodge", place: "Travelodge Hotel Hobart", coords: [-42.886, 147.324], kind: "lodging" }
       ],
       legs: [
@@ -175,8 +175,8 @@ window.TRIP = {
         { from: "Lunch — Get Shucked (optional)", to: "Ferry back — Roberts Point", mode: "driving", fallbackKm: 18, fallbackMin: 25 },
         { from: "Ferry back — Roberts Point", to: "Mount Wellington / kunanyi", mode: "driving", fallbackKm: 58, fallbackMin: 80 },
         { from: "Mount Wellington / kunanyi", to: "Dinner — Salamanca (optional)", mode: "driving", fallbackKm: 22, fallbackMin: 40 },
-        { from: "Dinner — Salamanca (optional)", to: "Bonorong Wildlife Sanctuary — night tour", mode: "driving", fallbackKm: 24, fallbackMin: 30 },
-        { from: "Bonorong Wildlife Sanctuary — night tour", to: "Back to Travelodge", mode: "driving", fallbackKm: 25, fallbackMin: 25 }
+        { from: "Dinner — Salamanca (optional)", to: "Constitution Dock twilight walk & ice-cream punt (optional)", mode: "driving", fallbackKm: 1, fallbackMin: 4 },
+        { from: "Constitution Dock twilight walk & ice-cream punt (optional)", to: "Back to Travelodge", mode: "driving", fallbackKm: 2, fallbackMin: 6 }
       ]
     },
     {
