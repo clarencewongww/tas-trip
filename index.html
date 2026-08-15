@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<!--
+  TasRoad — static Tasmania road-trip itinerary (13–21 Nov 2026).
+
+  ICON SPRITE
+  The SVG <defs> block at the top of <body> defines stroke-based 24×24 icons
+  as <symbol>s: icon-pin, icon-sun, icon-moon, icon-monitor, icon-locate,
+  icon-car, icon-plane, icon-ferry, icon-bed, icon-foot, icon-food,
+  icon-shopping, icon-leaf, icon-clock, icon-map.
+
+  Reference one anywhere (this page AND dynamically-rendered app content) with:
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-NAME"/></svg>
+  js/app.js renders the day content and reuses these same symbols, so keep the
+  symbol IDs stable.
+
+  Script load order (plain scripts, no modules):
+  Leaflet → data.js → maps.js → timeline.js → geo.js → theme.js → app.js
+-->
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#f7f3ea">
+  <meta name="description" content="Road trip itinerary for Tasmania — maps, driving times, and a live now indicator.">
+  <title>TasRoad · Tasmania Road Trip Itinerary</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&amp;family=Outfit:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- ===== Icon sprite (see comment at top of file) ===== -->
+  <svg style="display:none" aria-hidden="true">
+    <defs>
+      <symbol id="icon-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 21s-7-5.1-7-11a7 7 0 0 1 14 0c0 5.9-7 11-7 11z"/>
+        <circle cx="12" cy="10" r="2.5"/>
+      </symbol>
+      <symbol id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </symbol>
+      <symbol id="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
+      </symbol>
+      <symbol id="icon-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/>
+        <path d="M8 21h8"/>
+        <path d="M12 17v4"/>
+      </symbol>
+      <symbol id="icon-locate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="7"/>
+        <path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+        <circle cx="12" cy="12" r="1.5"/>
+      </symbol>
+      <symbol id="icon-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 11l1.6-4.8A2 2 0 0 1 8.5 4.8h7a2 2 0 0 1 1.9 1.4L19 11"/>
+        <path d="M3 11h18v5.5a1.5 1.5 0 0 1-1.5 1.5h-1.5v2h-2v-2H8v2H6v-2H4.5A1.5 1.5 0 0 1 3 16.5z"/>
+        <circle cx="7.5" cy="14.5" r="1"/>
+        <circle cx="16.5" cy="14.5" r="1"/>
+      </symbol>
+      <symbol id="icon-plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/>
+      </symbol>
+      <symbol id="icon-ferry" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1s1.2 1 2.5 1c2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+        <path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 1.81 7.38"/>
+        <path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/>
+      </symbol>
+      <symbol id="icon-bed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 20V8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12"/>
+        <path d="M2 13h20"/>
+      </symbol>
+      <symbol id="icon-foot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="4" r="2"/>
+        <path d="M12 6v6l-4 9M12 12l5 4"/>
+        <path d="M12 8l-5 2"/>
+      </symbol>
+      <symbol id="icon-food" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+        <path d="M7 2v20"/>
+        <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>
+      </symbol>
+      <symbol id="icon-shopping" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+        <path d="M3 6h18"/>
+        <path d="M16 10a4 4 0 0 1-8 0"/>
+      </symbol>
+      <symbol id="icon-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
+        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+      </symbol>
+      <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 7v5l3 3"/>
+      </symbol>
+      <symbol id="icon-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4z"/>
+        <path d="M8 2v18"/>
+        <path d="M16 6v16"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="hero">
+    <nav class="topbar" aria-label="Top bar">
+      <span class="brand">
+        <svg class="brand-mark" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-pin"/></svg>TasRoad
+      </span>
+      <span class="topbar__spacer" aria-hidden="true"></span>
+      <span class="topbar__dates">13–21 Nov 2026</span>
+      <button class="btn btn--icon" id="theme-toggle" aria-label="Switch theme">
+        <svg class="theme-ico theme-ico--sun" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-sun"/></svg>
+        <svg class="theme-ico theme-ico--dark" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-moon"/></svg>
+        <svg class="theme-ico theme-ico--auto" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-monitor"/></svg>
+      </button>
+    </nav>
+    <div class="hero-content">
+      <h1 class="hero-title">TasRoad</h1>
+      <p class="hero-subtitle">Tasmania road trip · 13–21 Nov 2026</p>
+      <p id="hero-now" class="hero-now" aria-live="polite">Loading…</p>
+    </div>
+  </header>
+
+  <section id="now-bar" class="now-rail" aria-label="Trip progress">
+    <div class="now-rail__track" id="trip-progress-track" role="progressbar" aria-label="Trip progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div id="trip-progress-fill"></div>
+      <div id="trip-comet"></div>
+    </div>
+    <div class="now-rail__readout">
+      <span class="now-rail__label" id="now-label">You should be at →</span>
+      <span class="now-rail__place" id="now-readout" aria-live="polite">—</span>
+      <span class="now-rail__sub" id="now-sub" aria-live="polite"></span>
+    </div>
+    <div class="now-rail__controls">
+      <button class="btn" id="locate-btn" aria-label="Use my location">
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-locate"/></svg> Locate me
+      </button>
+      <span id="locate-readout" class="locate-readout" aria-live="polite"></span>
+      <input type="range" id="preview-scrubber" min="0" max="1000" value="1000" step="1" aria-label="Preview trip time">
+      <button class="btn" id="live-btn">Live</button>
+      <span id="preview-badge" hidden>Previewing</span>
+    </div>
+  </section>
+
+  <nav id="day-tabs" class="day-tabs" role="tablist" aria-label="Days"></nav>
+
+  <main id="main">
+    <div id="day-sections" class="day-sections"></div>
+  </main>
+
+  <footer class="footer">
+    <p>Maps © OpenStreetMap contributors · CARTO basemaps · Routing: OSRM demo server · Leaflet</p>
+    <p>Location data is used only for routing and is never stored.</p>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/maps.js"></script>
+  <script src="js/timeline.js"></script>
+  <script src="js/geo.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/locate.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

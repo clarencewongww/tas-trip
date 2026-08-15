@@ -1,0 +1,1114 @@
+/* =====================================================================
+   TasRoad — static stylesheet (vanilla CSS, no build step).
+   Design tokens first, then layout, components, Leaflet, motion,
+   responsive and print rules.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   Tokens — light (default) & dark
+   --------------------------------------------------------------------- */
+:root {
+  --surface: oklch(0.972 0.008 85);
+  --surface-2: oklch(0.992 0.003 85);
+  --text: oklch(0.24 0.02 160);
+  --muted: oklch(0.5 0.02 160);
+  --border: oklch(0.87 0.015 85);
+  --brand: oklch(0.45 0.09 160);
+  --brand-strong: oklch(0.38 0.10 160);
+  --brand-soft: oklch(0.93 0.03 160);
+  --accent: oklch(0.53 0.14 45);
+  --accent-soft: oklch(0.94 0.04 45);
+  --water: oklch(0.55 0.10 235);
+  --water-strong: oklch(0.42 0.09 235);
+  --water-soft: oklch(0.92 0.03 235);
+  --danger: oklch(0.55 0.19 25);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px rgb(0 0 0 / 0.08);
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Outfit", "Segoe UI", sans-serif;
+
+  /* Timeline icon column centre (col1 + column-gap + half of col2).
+     Overridden at the ≥768px breakpoint. */
+  --tl-icon-x: 96px;
+}
+
+[data-theme="dark"] {
+  --surface: oklch(0.19 0.02 160);
+  --surface-2: oklch(0.23 0.02 160);
+  --text: oklch(0.93 0.01 85);
+  --muted: oklch(0.68 0.02 160);
+  --border: oklch(0.32 0.02 160);
+  --brand: oklch(0.62 0.11 160);
+  --brand-strong: oklch(0.68 0.10 160);
+  --brand-soft: oklch(0.30 0.04 160);
+  --accent: oklch(0.74 0.15 45);
+  --accent-soft: oklch(0.30 0.05 45);
+  --water: oklch(0.68 0.10 235);
+  --water-strong: oklch(0.68 0.10 235);
+  --water-soft: oklch(0.31 0.05 235);
+  --danger: oklch(0.60 0.18 25);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.4);
+}
+
+/* Auto mode follows the OS scheme: same dark tokens (and dark-only component
+   tweaks) as [data-theme="dark"]. <html data-theme> keeps the RAW mode
+   ("auto"), so dark tokens must be duplicated under the media query. */
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] {
+    --surface: oklch(0.19 0.02 160);
+    --surface-2: oklch(0.23 0.02 160);
+    --text: oklch(0.93 0.01 85);
+    --muted: oklch(0.68 0.02 160);
+    --border: oklch(0.32 0.02 160);
+    --brand: oklch(0.62 0.11 160);
+    --brand-strong: oklch(0.68 0.10 160);
+    --brand-soft: oklch(0.30 0.04 160);
+    --accent: oklch(0.74 0.15 45);
+    --accent-soft: oklch(0.30 0.05 45);
+    --water: oklch(0.68 0.10 235);
+    --water-strong: oklch(0.68 0.10 235);
+    --water-soft: oklch(0.31 0.05 235);
+    --danger: oklch(0.60 0.18 25);
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.4);
+  }
+
+  /* Dark-only component tweaks that pair with the dark tokens above. */
+  [data-theme="auto"] .hero::before {
+    opacity: 0.07;
+  }
+
+  [data-theme="auto"] .tl-row--now,
+  [data-theme="auto"] .tl-row.is-now {
+    background: oklch(0.26 0.04 160);
+  }
+}
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+[data-theme="auto"] {
+  color-scheme: light dark;
+}
+
+/* ---------------------------------------------------------------------
+   Base
+   --------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  min-width: 0;
+  /* Clear sticky now-rail when an anchor/tab scrolls a section into view. */
+  scroll-padding-top: 150px;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.6;
+  background: var(--surface);
+  color: var(--text);
+  min-height: 100vh;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+img, svg {
+  display: inline-block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+/* ---------------------------------------------------------------------
+   Skip link
+   --------------------------------------------------------------------- */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1200;
+  transform: translateY(-200%);
+  background: var(--brand-strong);
+  color: var(--surface);
+  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* ---------------------------------------------------------------------
+   Top bar
+   --------------------------------------------------------------------- */
+.topbar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--brand);
+  letter-spacing: -0.01em;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  color: var(--accent);
+}
+
+.topbar__spacer {
+  flex: 1 1 auto;
+}
+
+.topbar__dates {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------
+   Hero
+   --------------------------------------------------------------------- */
+.hero {
+  position: relative;
+  padding: 72px 24px 56px;
+  overflow: hidden;
+}
+
+/* Subtle topographic contour field — 1px lines, no gradients. */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='520' height='340' viewBox='0 0 520 340' fill='none' stroke='currentColor' stroke-width='1' stroke-linecap='round'><g><path d='M-30 296 C 55 258, 125 236, 200 244 C 275 252, 335 230, 430 210 C 478 201, 508 196, 550 194'/><path d='M-30 262 C 60 222, 130 199, 210 208 C 285 217, 340 193, 440 172 C 486 163, 512 158, 550 156'/><path d='M-30 228 C 65 186, 135 162, 220 172 C 295 182, 345 156, 450 134 C 494 125, 516 120, 550 118'/><path d='M-30 194 C 70 150, 140 125, 230 136 C 305 147, 350 119, 460 96 C 502 87, 520 82, 550 80'/><path d='M-30 160 C 75 114, 145 88, 240 100 C 315 112, 355 82, 470 58 C 510 49, 524 44, 550 42'/><path d='M-30 126 C 80 78, 150 51, 250 64 C 325 77, 360 45, 480 20 C 512 13, 526 9, 550 7'/></g><g><path d='M355 150 C 355 118, 388 96, 424 96 C 460 96, 493 118, 493 150 C 493 182, 460 204, 424 204 C 388 204, 355 182, 355 150Z'/><path d='M373 150 C 373 126, 395 110, 424 110 C 453 110, 475 126, 475 150 C 475 174, 453 190, 424 190 C 395 190, 373 174, 373 150Z'/><path d='M391 150 C 391 136, 406 126, 424 126 C 442 126, 457 136, 457 150 C 457 164, 442 174, 424 174 C 406 174, 391 164, 391 150Z'/><path d='M409 150 C 409 143, 415 138, 424 138 C 433 138, 439 143, 439 150 C 439 157, 433 162, 424 162 C 415 162, 409 157, 409 150Z'/></g></svg>");
+  background-repeat: repeat;
+  background-size: 520px 340px;
+  background-position: 50% 0;
+  color: var(--text);
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+[data-theme="dark"] .hero::before {
+  opacity: 0.07;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variation-settings: "opsz" 60;
+  font-size: clamp(2.6rem, 6vw, 4.5rem);
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.hero-subtitle {
+  margin: 12px 0 0;
+  font-weight: 500;
+  font-size: 1.1rem;
+  color: var(--muted);
+}
+
+.hero-now,
+#hero-now {
+  margin: 16px 0 0;
+  font-weight: 500;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------
+   Now rail (sticky progress bar)
+   --------------------------------------------------------------------- */
+.now-rail,
+#now-bar {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 12px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: center;
+}
+
+.now-rail__track,
+#trip-progress-track {
+  position: relative;
+  flex: 1 1 100%;
+  order: -1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+#trip-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: inherit;
+  background: var(--brand);
+  transition: width 0.5s linear;
+}
+
+#trip-comet {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  transform: translate(-50%, -50%);
+  transition: left 0.5s linear;
+}
+
+#now-bar.is-live #trip-comet {
+  animation: comet-pulse 1.8s ease-out infinite;
+}
+
+.now-rail__readout {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+.now-rail__label,
+#now-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.now-rail__place,
+#now-readout {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  line-height: 1.2;
+  color: var(--brand-strong);
+}
+
+.now-rail__sub,
+#now-sub {
+  display: block;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.now-rail__controls {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+#now-bar.is-previewing #now-readout {
+  color: var(--accent);
+}
+
+#now-bar.is-previewing #preview-badge {
+  display: inline-block;
+}
+
+#now-bar.is-live #live-btn {
+  background: var(--brand);
+  color: var(--surface);
+  border-color: var(--brand);
+}
+
+#preview-scrubber {
+  flex: 1 1 160px;
+  min-width: 140px;
+  height: 44px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+#preview-badge {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.locate-readout,
+#locate-readout {
+  font-size: 0.85rem;
+  color: var(--muted);
+  max-width: 320px;
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------------
+   Buttons
+   --------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  min-height: 44px;
+  transition: background-color 150ms ease-out, color 150ms ease-out,
+    border-color 150ms ease-out, transform 150ms ease-out;
+}
+
+.btn svg {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+
+.btn:hover {
+  border-color: var(--brand);
+  color: var(--brand-strong);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn--icon {
+  padding: 10px;
+}
+
+#theme-toggle,
+#locate-btn,
+#live-btn {
+  flex: 0 0 auto;
+}
+
+/* Theme icon: exactly one visible per mode. */
+.theme-ico {
+  display: none;
+  width: 20px;
+  height: 20px;
+}
+
+[data-theme="light"] .theme-ico--sun,
+[data-theme="dark"] .theme-ico--dark,
+[data-theme="auto"] .theme-ico--auto {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------
+   Day tabs
+   --------------------------------------------------------------------- */
+.day-tabs,
+#day-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  -webkit-overflow-scrolling: touch;
+  max-width: 1120px;
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+  scroll-snap-type: x proximity;
+}
+
+.tab {
+  flex: 0 0 auto;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  white-space: nowrap;
+  min-height: 44px;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: background-color 150ms ease-out, color 150ms ease-out,
+    border-color 150ms ease-out;
+}
+
+.tab:hover {
+  border-color: var(--brand);
+  color: var(--brand-strong);
+}
+
+.tab--active,
+.tab[aria-selected="true"] {
+  background: var(--brand);
+  color: var(--surface);
+  border-color: var(--brand);
+}
+
+/* ---------------------------------------------------------------------
+   Day sections & cards
+   --------------------------------------------------------------------- */
+.day-sections,
+#day-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  padding: 40px 24px 80px;
+  max-width: 1120px;
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+#main {
+  flex: 1 0 auto;
+  min-width: 0;
+}
+
+.day-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .day-card {
+    animation: fade-up 300ms ease-out both;
+  }
+
+  .day-card:nth-child(1) { animation-delay: 40ms; }
+  .day-card:nth-child(2) { animation-delay: 80ms; }
+  .day-card:nth-child(3) { animation-delay: 120ms; }
+  .day-card:nth-child(4) { animation-delay: 160ms; }
+  .day-card:nth-child(5) { animation-delay: 200ms; }
+  .day-card:nth-child(6) { animation-delay: 240ms; }
+  .day-card:nth-child(7) { animation-delay: 280ms; }
+  .day-card:nth-child(8) { animation-delay: 320ms; }
+  .day-card:nth-child(n + 9) { animation-delay: 360ms; }
+}
+
+.day-card__header {
+  display: grid;
+  gap: 8px;
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.day-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.3rem, 2.5vw, 1.7rem);
+  letter-spacing: -0.005em;
+}
+
+.day-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.chip {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.chip--hotel {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  border-color: transparent;
+}
+
+.chip--drive {
+  background: var(--accent-soft);
+  color: var(--muted);
+  border-color: transparent;
+}
+
+/* ---------------------------------------------------------------------
+   Timeline
+   --------------------------------------------------------------------- */
+.day-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 16px 28px 28px;
+}
+
+.tl-row {
+  display: grid;
+  grid-template-columns: 64px 40px 1fr;
+  gap: 8px 12px;
+  padding: 10px 0;
+  position: relative;
+}
+
+/* Vertical connector through the icon column. */
+.tl-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--tl-icon-x);
+  width: 2px;
+  background: var(--border);
+}
+
+.day-timeline > :first-child::before {
+  top: 50%;
+}
+
+.day-timeline > :last-child::before {
+  bottom: 50%;
+}
+
+.tl-time {
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  text-align: right;
+  padding-top: 4px;
+  white-space: nowrap;
+}
+
+.tl-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--surface);
+  z-index: 1;
+}
+
+.tl-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Kind-tinted icons (attribute selector set by the renderer). */
+.tl-icon[data-kind="flight"],
+.tl-icon[data-kind="ferry"] {
+  background: var(--water-soft);
+  color: var(--water-strong);
+}
+
+.tl-icon[data-kind="lodging"] {
+  background: var(--brand);
+  color: var(--surface);
+}
+
+.tl-icon[data-kind="food"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.tl-body {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.35em;
+  align-items: baseline;
+}
+
+.tl-title {
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.tl-note {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+/* Text separators: title and successive notes read as one inline phrase. */
+.tl-title + .tl-note::before,
+.tl-note + .tl-note::before {
+  content: " · ";
+  color: var(--muted);
+}
+
+/* Optional / alternate entries: dashed ring + "Optional" chip. */
+.tl-row--alt .tl-icon,
+.entry--alt .tl-icon {
+  border-style: dashed;
+  opacity: 0.85;
+}
+
+.tl-row--alt .tl-title::after,
+.entry--alt .tl-title::after {
+  content: "Optional";
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+
+/* Live "now" row. */
+.tl-row--now,
+.tl-row.is-now {
+  background: var(--brand-soft);
+  border-radius: 8px;
+  padding: 10px 8px;
+}
+
+[data-theme="dark"] .tl-row--now,
+[data-theme="dark"] .tl-row.is-now {
+  background: oklch(0.26 0.04 160);
+}
+
+/* Compensate for the now-row side padding so the connector stays centred. */
+.tl-row--now::before,
+.tl-row.is-now::before {
+  left: calc(var(--tl-icon-x) + 8px);
+}
+
+.tl-row--now .tl-icon,
+.tl-row.is-now .tl-icon {
+  background: var(--accent);
+  color: var(--surface-2);
+  border-color: var(--surface);
+}
+
+/* "Next up" row during gaps (class added by the renderer): tinted
+   background + accent icon ring — no left border bars. */
+.tl-row.is-next {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 10px 8px;
+}
+
+.tl-row.is-next::before {
+  left: calc(var(--tl-icon-x) + 8px);
+}
+
+.tl-row.is-next .tl-icon {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------
+   Drive rows (dashed segments between entries)
+   --------------------------------------------------------------------- */
+.drive-row {
+  display: grid;
+  grid-template-columns: 64px 40px 1fr;
+  gap: 8px 12px;
+  padding: 10px 0;
+  position: relative;
+}
+
+.drive-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--tl-icon-x);
+  width: 2px;
+  border-left: 2px dashed var(--border);
+}
+
+.drive-row__body {
+  grid-column: 3;
+  border-top: 1px dashed var(--border);
+  padding: 10px 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  min-width: 0;
+}
+
+.drive-row__body svg {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-right: 6px;
+  color: var(--muted);
+}
+
+/* ---------------------------------------------------------------------
+   Day maps (Leaflet)
+   --------------------------------------------------------------------- */
+.day-map {
+  height: clamp(280px, 45vh, 520px);
+  width: 100%;
+  box-sizing: border-box;
+  border-top: 1px solid var(--border);
+  position: relative;
+  background-color: var(--surface-2);
+  /* Loading placeholder only — vanishes once Leaflet initialises. */
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 12px,
+    color-mix(in oklab, var(--text) 2%, transparent) 12px 13px
+  );
+}
+
+.leaflet-container {
+  background: var(--surface);
+  font-family: var(--font-body);
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.leaflet-popup-content {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.leaflet-popup-content b {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.leaflet-popup-tip {
+  background: var(--surface-2);
+}
+
+.leaflet-control-zoom a {
+  background: var(--surface-2) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  color: var(--brand-strong) !important;
+}
+
+.leaflet-control-attribution {
+  background: color-mix(in oklab, var(--surface) 85%, transparent);
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.leaflet-control-attribution a {
+  color: var(--brand-strong);
+}
+
+/* ---------------------------------------------------------------------
+   Trip markers (Leaflet divIcons). CSS owns the whole look — markers.js
+   only supplies the class names and iconSize. Width/height are set inline
+   by Leaflet from iconSize, so do NOT set them here.
+   --------------------------------------------------------------------- */
+.trip-marker {
+  background: oklch(0.45 0.09 160);           /* brand green */
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+  font-family: var(--font-body);
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.3));
+  transition: scale 150ms ease-out;
+}
+
+.trip-marker__num {
+  pointer-events: none;
+}
+
+.trip-marker--alt {
+  border-style: dashed;
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+  opacity: 0.9;
+}
+
+[data-theme="dark"] .trip-marker {
+  border-width: 3px;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .trip-marker {
+    border-width: 3px;
+  }
+}
+
+.trip-marker--now {
+  animation: marker-pulse 1.6s ease-out infinite;
+  z-index: 1000 !important;
+  scale: 1.15;
+}
+
+/* ---------------------------------------------------------------------
+   Footer
+   --------------------------------------------------------------------- */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 24px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.footer p {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.footer p + p {
+  margin-top: 4px;
+}
+
+/* ---------------------------------------------------------------------
+   Motion
+   --------------------------------------------------------------------- */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes comet-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+@keyframes marker-pulse {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent);
+  }
+  100% {
+    box-shadow: 0 0 0 12px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .trip-marker--now,
+  #now-bar.is-live #trip-comet {
+    animation: none !important;
+  }
+
+  .day-card {
+    animation: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Responsive
+   --------------------------------------------------------------------- */
+@media (min-width: 768px) {
+  :root {
+    --tl-icon-x: 106px;
+  }
+
+  .tl-row,
+  .drive-row {
+    grid-template-columns: 72px 44px 1fr;
+  }
+
+  .now-rail__readout {
+    flex: 1 1 320px;
+  }
+
+  .now-rail__controls {
+    flex: 1 1 320px;
+    justify-content: flex-end;
+  }
+
+  .day-card__header {
+    grid-template-columns: 1fr auto;
+    align-items: start;
+  }
+
+  .day-card__meta {
+    justify-content: flex-end;
+    text-align: right;
+  }
+}
+
+@media (min-width: 1024px) {
+  .day-timeline {
+    padding: 16px 32px 32px;
+  }
+}
+
+/* Mobile: keep the scrubber and the Live button on one row so the button
+   no longer sits alone on its own line. */
+@media (max-width: 767px) {
+  .now-rail__controls {
+    width: 100%;
+  }
+
+  #preview-scrubber {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  #live-btn {
+    flex: 0 0 auto;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Print
+   --------------------------------------------------------------------- */
+@media print {
+  #now-bar,
+  .day-tabs,
+  .day-map,
+  .footer,
+  .btn {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .hero {
+    padding: 24px 0;
+  }
+
+  .hero::before {
+    display: none;
+  }
+
+  .day-card {
+    border: none;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  /* Print every day, including non-first cards the app hides with [hidden]. */
+  .day-card[hidden] {
+    display: block !important;
+  }
+
+  .day-card__header,
+  .day-sections {
+    break-inside: avoid;
+  }
+
+  .day-sections {
+    gap: 32px;
+    padding: 16px 0 32px;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    color: var(--muted);
+    font-size: 0.8em;
+  }
+
+  .skip-link {
+    display: none;
+  }
+}
