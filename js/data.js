@@ -90,7 +90,7 @@ window.TRIP = {
       origin: { title: "Depart — Scamander", coords: [-41.4639, 148.2361], departTime: "08:45" },
       entries: [
         { start: "09:00", end: "10:00", title: "Binalong Bay", place: "Binalong Bay", coords: [-41.2505, 148.3085], kind: "beach", note: "Orange lichen rocks" },
-        { start: "10:30", end: "12:30", title: "Bay of Fires Conservation Area — The Gardens", place: "The Gardens", coords: [-41.165, 148.2925], kind: "park", note: "Beach walk between the boulders" },
+        { start: "10:30", end: "12:30", title: "Bay of Fires Conservation Area — The Gardens", place: "The Gardens", coords: [-41.1825, 148.2713], kind: "park", note: "Beach walk between the boulders" },
         { start: "12:30", end: "13:30", title: "Lunch — St Helens", place: "St Helens", coords: [-41.3205, 148.247], kind: "food" },
         { start: "16:00", end: "23:59", title: "Check in — Launceston (hotel TBC)", place: "Launceston", coords: [-41.4332, 147.1441], kind: "lodging", note: "2-night stay" }
       ],
