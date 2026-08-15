@@ -149,6 +149,11 @@
       if (global.TripRender) {
         api = global.TripRender.getMapApi(target.dayIndex);
         if (!api) {
+          // Keep the canonical active day (TripRender) in sync when we
+          // force-open a day's map so preview highlights follow it.
+          if (typeof global.TripRender.setActiveDay === "function") {
+            global.TripRender.setActiveDay(target.dayIndex);
+          }
           global.TripRender.activateDay(target.dayIndex);
           api = global.TripRender.getMapApi(target.dayIndex);
         }

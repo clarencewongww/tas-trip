@@ -23,11 +23,12 @@
 
   // ------------------------------------------------------------------
   // Internal state (closure-scoped, so init()/tick() are re-entrant-safe).
+  // The active day panel lives in TripRender (getActiveDay/setActiveDay) —
+  // this module reads it rather than keeping a private copy.
   // ------------------------------------------------------------------
   let inited = false;
   let previewTime = null; // epoch ms while scrubbing, else null (live mode)
   let liveDay = null;     // last auto-followed day index (null = never followed)
-  let activeDay = 0;      // currently active day panel (TripRender does not expose one)
 
   // Element references.
   let themeToggle = null;
@@ -93,6 +94,14 @@
     } catch (err) {
       warn("TripRender." + method + " failed: " + (err && err.message ? err.message : err));
     }
+  }
+
+  /** Read the canonical active day from TripRender (single source of truth). */
+  function getActiveDay() {
+    if (global.TripRender && typeof global.TripRender.getActiveDay === "function") {
+      return global.TripRender.getActiveDay();
+    }
+    return -1;
   }
 
   // ------------------------------------------------------------------
@@ -193,7 +202,7 @@
     if (isLive && Number.isInteger(st.dayIndex)) {
       if (liveDay === null || liveDay !== st.dayIndex) {
         liveDay = st.dayIndex;
-        activeDay = st.dayIndex;
+        callRender("setActiveDay", [st.dayIndex]);
         callRender("activateDay", [st.dayIndex]);
         callRender("setNowDotOnTab", [st.dayIndex]);
         applyHighlights(st); // the day's map initializes on activateDay — re-apply
@@ -227,7 +236,7 @@
     }
 
     // No auto-follow: only highlight when the previewed day is on screen.
-    if (Number.isInteger(st.dayIndex) && st.dayIndex === activeDay) {
+    if (Number.isInteger(st.dayIndex) && st.dayIndex === getActiveDay()) {
       applyHighlights(st);
     }
   }
@@ -288,7 +297,7 @@
     const tab = target.closest(".tab");
     if (!tab) return;
     const idx = Array.prototype.indexOf.call(dayTabs.children, tab);
-    if (idx >= 0) activeDay = idx;
+    if (idx >= 0) callRender("setActiveDay", [idx]);
   }
 
   // ------------------------------------------------------------------

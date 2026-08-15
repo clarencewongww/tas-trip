@@ -15,7 +15,7 @@
  *
  * dayMapApi:
  *   legResults: Array<{ from, to, km, min, mode, source }>
- *   getLegResults(), highlight(i), addUserMarker(latlng, accuracy?),
+ *   getLegResults(), highlight(i), panTo(i), addUserMarker(latlng, accuracy?),
  *   fitUser(), invalidateSize(), destroy(), setTheme(mode)
  */
 (function (global) {
@@ -33,7 +33,8 @@
   const ACCENT_COLOR = "#e07a3f"; // user location dot
 
   const OSRM_BASE = "https://router.project-osrm.org/route/v1/driving";
-  const OSRM_RATE_MS = 800; // demo server rate limit — one request per 800 ms
+  const OSRM_RATE_MS = 800; // demo server rate limit — min spacing between request starts
+  const OSRM_CONCURRENCY = 2; // max OSRM requests in flight at once
   const OSRM_TIMEOUT_MS = 20000;
 
   const CACHE_PREFIX = "tasroad-osrm-v1:";
@@ -49,9 +50,12 @@
   // ------------------------------------------------------------------
   // Shared state
   // ------------------------------------------------------------------
-  const activeMaps = new Set(); // entries: { applyTheme } for live maps (theme re-apply)
-  let queueTail = Promise.resolve(); // OSRM throttle queue (FIFO)
+  const activeMaps = new Set(); // entries: { applyTheme, invalidateSize } for live maps
+  let osrmNextStart = Promise.resolve(); // resolves when the next OSRM request may start
+  let osrmActive = 0; // OSRM requests currently in flight
+  let osrmSlotWaiters = []; // resolvers queued for a free OSRM concurrency slot
   let themeListenerAttached = false;
+  let resizeListenerAttached = false;
 
   // ------------------------------------------------------------------
   // Theme helpers
@@ -111,6 +115,17 @@
     return Math.abs(pa[0] - pb[0]) < 1e-4 && Math.abs(pa[1] - pb[1]) < 1e-4;
   }
 
+  /**
+   * Lookup key for exact-coordinate stacking (rounded to 1e-6 deg, ~0.1 m)
+   * so near-identical floats from the same source point collide.
+   */
+  function coordKey(lat, lng) {
+    return (
+      Math.round(Number(lat) * 1e6) / 1e6 + "," +
+      Math.round(Number(lng) * 1e6) / 1e6
+    );
+  }
+
   function prefersReducedMotion() {
     try {
       return (
@@ -168,7 +183,7 @@
   }
 
   // ------------------------------------------------------------------
-  // OSRM routing (shared helper: FIFO throttle queue + cache)
+  // OSRM routing (shared helper: throttled starts + concurrency limit + cache)
   // ------------------------------------------------------------------
   function downsample(points, maxPoints) {
     if (!Array.isArray(points) || points.length <= maxPoints) return points;
@@ -181,13 +196,40 @@
     return out;
   }
 
-  /** Run `fn` after the previous queued request, then wait 800 ms before the next. */
+  /** Release an OSRM concurrency slot and hand it to the next queued request. */
+  function releaseOsrmSlot() {
+    osrmActive -= 1;
+    if (osrmSlotWaiters.length > 0) {
+      osrmSlotWaiters.shift()(releaseOsrmSlot);
+      osrmActive += 1;
+    }
+  }
+
+  function acquireOsrmSlot() {
+    if (osrmActive < OSRM_CONCURRENCY) {
+      osrmActive += 1;
+      return Promise.resolve(releaseOsrmSlot);
+    }
+    return new Promise(function (resolve) {
+      osrmSlotWaiters.push(resolve);
+    });
+  }
+
+  /** Start `fn` at least OSRM_RATE_MS after the previous start, with at most
+   *  OSRM_CONCURRENCY requests in flight at once. */
   function throttled(fn) {
-    const run = queueTail.then(fn);
-    queueTail = run.then(
-      function () { return new Promise(function (resolve) { setTimeout(resolve, OSRM_RATE_MS); }); },
-      function () { return new Promise(function (resolve) { setTimeout(resolve, OSRM_RATE_MS); }); }
-    );
+    const start = osrmNextStart;
+    osrmNextStart = start.then(function () {
+      return new Promise(function (resolve) { setTimeout(resolve, OSRM_RATE_MS); });
+    });
+    const run = start.then(function () {
+      return acquireOsrmSlot().then(function (release) {
+        return fn().then(
+          function (result) { release(); return result; },
+          function (err) { release(); throw err; }
+        );
+      });
+    });
     return run;
   }
 
@@ -278,6 +320,7 @@
     legResults: [],
     getLegResults: function () { return []; },
     highlight: function () {},
+    panTo: function () {},
     addUserMarker: function () {},
     fitUser: function () {},
     invalidateSize: function () {},
@@ -310,6 +353,33 @@
   }
 
   // ------------------------------------------------------------------
+  // Viewport resize — the map container height is CSS-clamped (45vh), so
+  // mobile URL-bar show/hide and rotation change the container size without
+  // Leaflet knowing. One shared, debounced listener covers every live map.
+  // ------------------------------------------------------------------
+  let viewportResizeTimer = null;
+
+  function onViewportResize() {
+    if (viewportResizeTimer) clearTimeout(viewportResizeTimer);
+    viewportResizeTimer = setTimeout(function () {
+      viewportResizeTimer = null;
+      if (activeMaps.size === 0) return;
+      activeMaps.forEach(function (entry) {
+        if (entry && typeof entry.invalidateSize === "function") {
+          entry.invalidateSize();
+        }
+      });
+    }, 150);
+  }
+
+  function ensureResizeListener() {
+    if (resizeListenerAttached) return;
+    win.addEventListener("resize", onViewportResize, { passive: true });
+    win.addEventListener("orientationchange", onViewportResize);
+    resizeListenerAttached = true;
+  }
+
+  // ------------------------------------------------------------------
   // Day map
   // ------------------------------------------------------------------
   function initDayMap(containerId, day, opts) {
@@ -337,6 +407,7 @@
     let destroyed = false;
     let tileLayer = null;
     let activeMarkerIndex = null;
+    let focusTimer = null;
     let userMarker = null;
     let userAccuracyCircle = null;
 
@@ -375,17 +446,39 @@
 
     // Numbered markers + popups (DOM built with textContent — no HTML string
     // interpolation of itinerary data).
+    // Waypoints that share the exact same coordinates (origin == "free
+    // morning" entry, two HBA entries, etc.) would otherwise stack and let the
+    // later marker hide the earlier one's number. Each subsequent marker at
+    // the same point is fanned out 30 px to the right via a left-shifted
+    // anchor, keeping both numbers readable. markers[] order stays waypoint
+    // order — the rest of the module relies on that index.
+    const stackCounts = new Map(); // coordKey -> number of markers already placed there
+
     const markers = waypoints.map(function (wp, i) {
       const num = doc.createElement("span");
       num.className = "trip-marker__num";
       num.textContent = String(i + 1);
 
+      const key = coordKey(wp.coords[0], wp.coords[1]);
+      const stackedCount = stackCounts.get(key) || 0;
+      stackCounts.set(key, stackedCount + 1);
+      const stacked = stackedCount > 0;
+
       const icon = L.divIcon({
-        className: "trip-marker" + (wp.alt ? " trip-marker--alt" : ""),
+        className:
+          "trip-marker" +
+          (wp.alt ? " trip-marker--alt" : "") +
+          (stacked ? " trip-marker--stacked" : ""),
         html: num,
         iconSize: [26, 26],
-        iconAnchor: [13, 13],
-        popupAnchor: [0, -15]
+        iconAnchor: stacked ? [13 - stackedCount * 30, 13] : [13, 13],
+        // Leaflet 1.9.4 opens popups at the marker's TRUE coordinate (the
+        // iconAnchor is ignored for popup position), so a fanned (stacked)
+        // marker's popup would open 30px * k to the LEFT of its icon. Shift
+        // the popup right by the same 30px * k so it opens horizontally
+        // centered on the fanned icon; the first marker (k = 0) keeps the
+        // default [0, -15].
+        popupAnchor: stacked ? [30 * stackedCount, -15] : [0, -15]
       });
 
       const marker = L.marker(wp.coords, { icon: icon, title: wp.title, keyboard: true }).addTo(map);
@@ -440,15 +533,18 @@
     // dashed fallback/water lines the halo stays solid while the main line
     // keeps its dashes.
     function addRouteLine(latlngs, style) {
-      if (destroyed || !style) return;
+      if (destroyed || !style) return null;
+      const layers = [];
       const dark = effectiveTheme() === "dark";
       if (dark) {
-        L.polyline(latlngs, {
-          color: "#f4efe6",
-          weight: style.haloWeight || 5,
-          opacity: 0.55,
-          interactive: false
-        }).addTo(map);
+        layers.push(
+          L.polyline(latlngs, {
+            color: "#f4efe6",
+            weight: style.haloWeight || 5,
+            opacity: 0.55,
+            interactive: false
+          }).addTo(map)
+        );
       }
       const opts = {
         color: style.color,
@@ -456,7 +552,9 @@
         opacity: style.opacity
       };
       if (style.dashArray) opts.dashArray = style.dashArray;
-      L.polyline(latlngs, opts).addTo(map);
+      if (style.className) opts.className = style.className;
+      layers.push(L.polyline(latlngs, opts).addTo(map));
+      return layers;
     }
 
     function drawLeg(i, a, b) {
@@ -475,8 +573,33 @@
       const mode = leg && leg.mode ? leg.mode : "driving";
 
       if (mode === "driving") {
+        // Provisional dashed straight line as soon as the markers exist, so a
+        // connecting path is visible while OSRM resolves. Replaced by the
+        // routed solid line on success or the dashed estimate on failure —
+        // either way the provisional layers are removed first.
+        let pendingLayers = null;
+        if (!destroyed) {
+          pendingLayers = addRouteLine([a.coords, b.coords], {
+            dashArray: "4 8",
+            color: FALLBACK_COLOR,
+            weight: 3,
+            opacity: 0.8,
+            haloWeight: 5,
+            className: "route--pending"
+          });
+        }
+
+        function removePending() {
+          if (!pendingLayers) return;
+          pendingLayers.forEach(function (layer) {
+            map.removeLayer(layer);
+          });
+          pendingLayers = null;
+        }
+
         return osrmRoute(a.coords, b.coords).then(function (route) {
           if (destroyed) return;
+          removePending();
           const dark = effectiveTheme() === "dark";
           addRouteLine(route.polyline, {
             color: BRAND_COLOR,
@@ -487,6 +610,7 @@
           setLegResult(i, a.title, b.title, route.km, route.min, "driving", "osrm");
         }).catch(function () {
           if (destroyed) return;
+          removePending();
           addRouteLine([a.coords, b.coords], {
             dashArray: "4 8",
             color: FALLBACK_COLOR,
@@ -571,10 +695,23 @@
       tileLayer.addTo(map);
       // Marker borders need no JS: CSS [data-theme="dark"] / @media auto rules
       // handle the 3px dark-mode border reactively.
+      // Tile swap can shift the map pane's pixel size — re-sync it.
+      try {
+        map.invalidateSize();
+      } catch (err) { /* ignore */ }
     }
 
-    const themeEntry = { applyTheme: applyTheme };
+    const themeEntry = {
+      applyTheme: applyTheme,
+      invalidateSize: function () {
+        if (destroyed) return;
+        try {
+          map.invalidateSize();
+        } catch (err) { /* ignore */ }
+      }
+    };
     ensureThemeListener();
+    ensureResizeListener();
     activeMaps.add(themeEntry);
 
     const api = {
@@ -597,6 +734,26 @@
         activeMarkerIndex = i;
         try {
           map.panTo(marker.getLatLng(), { animate: !prefersReducedMotion() });
+        } catch (err) { /* hidden container — ignore */ }
+      },
+
+      panTo: function (i) {
+        if (destroyed) return;
+        const marker = markers[i];
+        if (!marker) return;
+        if (focusTimer !== null) {
+          clearTimeout(focusTimer);
+          focusTimer = null;
+        }
+        const el = marker.getElement();
+        if (el) el.classList.add("trip-marker--focus");
+        focusTimer = setTimeout(function () {
+          focusTimer = null;
+          const current = marker.getElement();
+          if (current) current.classList.remove("trip-marker--focus");
+        }, 1400);
+        try {
+          map.setView(marker.getLatLng(), Math.max(map.getZoom(), 14), { animate: true });
         } catch (err) { /* hidden container — ignore */ }
       },
 
@@ -655,6 +812,10 @@
       destroy: function () {
         if (destroyed) return;
         destroyed = true;
+        if (focusTimer !== null) {
+          clearTimeout(focusTimer);
+          focusTimer = null;
+        }
         activeMaps.delete(themeEntry);
         try {
           map.remove();

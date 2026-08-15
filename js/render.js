@@ -10,6 +10,8 @@
  *   activateDay(i)                  — tab/panel switching + lazy map init
  *   getMapApi(i)                    — TripMaps api or null
  *   getDayRoot(i)                   — the day's <article> or null
+ *   getActiveDay()                  — currently active day index (canonical owner)
+ *   setActiveDay(i)                 — set the active day index (canonical owner)
  *   getEntryRow(dayIndex, entryIndex)   — tl-row element or null
  *   getWaypointIndex(dayIndex, entryIndex) — waypoint index (origin counts as 0)
  *   highlightNow(dayIndex, entryIndex, isGap) — .is-now / .is-next + scroll
@@ -177,9 +179,11 @@
     const ol = doc.createElement("ol");
     ol.className = "day-timeline";
 
-    const waypoints = [];
+    // Every stop renders a row (origin included) — even entries that carry no
+    // coordinates.
+    const stops = [];
     if (day.origin) {
-      waypoints.push({
+      stops.push({
         kind: "origin",
         idx: -1,
         title: day.origin.title || "Departure",
@@ -192,7 +196,7 @@
       });
     }
     (Array.isArray(day.entries) ? day.entries : []).forEach(function (e, j) {
-      waypoints.push({
+      stops.push({
         kind: "entry",
         idx: j,
         title: e.title || "",
@@ -205,11 +209,27 @@
       });
     });
 
-    waypoints.forEach(function (wp, n) {
+    // The waypoint sequence maps.js actually maps: origin + entries with a
+    // valid coords array (same filter as maps.js). Timeline badges and map
+    // markers are numbered from THIS list, so rows for coordless entries stay
+    // visible but carry no waypoint number — keeping badge/marker numbering
+    // in lockstep for every day.
+    const waypoints = stops.filter(function (wp) {
+      return Array.isArray(wp.coords) && wp.coords.length >= 2;
+    });
+
+    stops.forEach(function (wp, n) {
       const li = doc.createElement("li");
       li.className = "tl-row" + (wp.alt ? " entry--alt" : "");
+      // Every waypoint row (origin included) carries its 0-based waypoint
+      // index (origin counts as 0) so timeline badges and map markers stay in
+      // lockstep with maps.js; non-waypoint rows get no data-wp.
+      const waypointIndex = waypoints.indexOf(wp);
+      const isWaypoint = waypointIndex !== -1;
+      if (isWaypoint) {
+        li.setAttribute("data-wp", String(waypointIndex));
+      }
       if (wp.kind === "entry") {
-        li.setAttribute("data-wp", String(n));
         li.setAttribute("data-entry", dayIndex + ":" + wp.idx);
       }
 
@@ -223,6 +243,16 @@
       icon.setAttribute("data-kind", wp.kindName || "default");
       icon.appendChild(svgIcon(wp.kind === "origin" ? "car" : iconFor(wp.kindName), "tl-ico"));
       li.appendChild(icon);
+
+      // Number badge: waypoint index + 1 (maps.js numbers markers 1..N).
+      // Non-waypoint rows (coordless entries) get no badge.
+      if (isWaypoint) {
+        const num = doc.createElement("span");
+        num.className = "tl-num";
+        num.setAttribute("aria-hidden", "true");
+        num.textContent = String(waypointIndex + 1);
+        li.appendChild(num);
+      }
 
       const body = doc.createElement("span");
       body.className = "tl-body";
@@ -245,15 +275,21 @@
       li.appendChild(body);
       ol.appendChild(li);
 
-      // Drive row between consecutive waypoints (positional: data-leg = gap n).
-      // Pairs that share coordinates get no row — maps.js reports mode "skip".
-      if (n < waypoints.length - 1 && !sameCoordinates(wp, waypoints[n + 1])) {
-        const next = waypoints[n + 1];
+      // Drive row between consecutive waypoints (positional: data-leg = gap n,
+      // matching maps.js's legResults index). Pairs that share coordinates get
+      // no row — maps.js reports mode "skip". Coordless stops are not waypoints
+      // and therefore never start or end a drive row.
+      if (
+        isWaypoint &&
+        waypointIndex < waypoints.length - 1 &&
+        !sameCoordinates(wp, waypoints[waypointIndex + 1])
+      ) {
+        const next = waypoints[waypointIndex + 1];
         const leg = findLeg(day, wp.title, next.title);
         const mode = leg && leg.mode ? leg.mode : "driving";
         const dr = doc.createElement("li");
         dr.className = "drive-row";
-        dr.setAttribute("data-leg", String(n));
+        dr.setAttribute("data-leg", String(waypointIndex));
         const bodySpan = doc.createElement("span");
         bodySpan.className = "drive-row__body";
         bodySpan.appendChild(svgIcon(legModeIcon(mode), "drive-ico"));
@@ -381,6 +417,51 @@
   }
 
   // ------------------------------------------------------------------
+  // Timeline <-> map interaction
+  // ------------------------------------------------------------------
+  const rowFlashTimers = new WeakMap();
+  const ROW_FLASH_MS = 1000;
+
+  /** One-shot visual flash on the clicked row (CSS styles .tl-row--flash). */
+  function flashTimelineRow(row) {
+    row.classList.add("tl-row--flash");
+    const prev = rowFlashTimers.get(row);
+    if (prev) clearTimeout(prev);
+    rowFlashTimers.set(
+      row,
+      setTimeout(function () {
+        row.classList.remove("tl-row--flash");
+        rowFlashTimers.delete(row);
+      }, ROW_FLASH_MS)
+    );
+  }
+
+  /**
+   * Delegated click: a stop row pans its day's map to that waypoint's marker
+   * (maps.js api.panTo) and flashes the row. Drive rows and non-waypoint
+   * clicks are ignored; a missing/unready map api is a silent no-op.
+   */
+  function onTimelineClick(event) {
+    const target = event.target;
+    if (!target || typeof target.closest !== "function") return;
+    if (target.closest("a")) return; // never intercept link clicks inside rows
+    const row = target.closest(".tl-row");
+    if (!row) return;
+    const raw = row.getAttribute("data-wp");
+    if (raw === null || raw === "") return; // no waypoint (drive rows)
+    const panel = row.closest(".day-card");
+    const dayIndex = panel ? panelEls.indexOf(panel) : -1;
+    if (dayIndex < 0) return;
+    const api = mapApis.get(dayIndex);
+    if (api && typeof api.panTo === "function") {
+      try {
+        api.panTo(Number(raw));
+      } catch (err) { /* map hidden / not ready — non-fatal */ }
+    }
+    flashTimelineRow(row);
+  }
+
+  // ------------------------------------------------------------------
   // Public API
   // ------------------------------------------------------------------
   function activateDay(i) {
@@ -401,6 +482,17 @@
     }
 
     initOrRefreshMap(i);
+  }
+
+  /** Canonical active-day owner: app.js/locate.js read this instead of keeping a copy. */
+  function getActiveDay() {
+    return activeDay;
+  }
+
+  /** Canonical active-day setter (ignores out-of-range input, like activateDay). */
+  function setActiveDay(i) {
+    if (Number.isInteger(i) && i >= 0 && i < dayCount) activeDay = i;
+    return activeDay;
   }
 
   function getMapApi(i) {
@@ -553,6 +645,9 @@
     tabsEl.appendChild(tabFrag);
     sectionsEl.appendChild(panelFrag);
 
+    // Timeline rows link to the day map: one delegated listener for all days.
+    sectionsEl.addEventListener("click", onTimelineClick);
+
     // WAI-ARIA tab pattern: arrow keys move + auto-activate (wrap around),
     // Home/End jump to first/last. activateDay does the roving tabindex.
     tabsEl.addEventListener("keydown", function (event) {
@@ -582,6 +677,8 @@
     activateDay: activateDay,
     getMapApi: getMapApi,
     getDayRoot: getDayRoot,
+    getActiveDay: getActiveDay,
+    setActiveDay: setActiveDay,
     getEntryRow: getEntryRow,
     getWaypointIndex: getWaypointIndex,
     highlightNow: highlightNow,
