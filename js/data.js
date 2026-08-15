@@ -157,9 +157,9 @@ window.TRIP = {
       notes: ["Alternative: swap Mount Wellington for MONA (closes 5 pm — better as a morning swap with Bruny)."],
       origin: { title: "Depart — Travelodge Hobart", coords: [-42.886, 147.324], departTime: "08:00" },
       entries: [
-        { start: "08:45", end: "09:10", title: "Kettering — Bruny Island ferry", place: "Kettering", coords: [-43.128, 147.2455], kind: "ferry", note: "Car ferry; ~20 min crossing" },
+        { start: "08:45", end: "09:10", title: "Kettering — Bruny Island ferry", place: "Kettering", coords: [-43.1274, 147.2555], kind: "ferry", note: "Car ferry; ~20 min crossing" },
         { start: "09:30", end: "09:55", title: "Bruny Island — Roberts Point", place: "Roberts Point, Bruny Island", coords: [-43.1463, 147.2810], kind: "ferry" },
-        { start: "10:05", end: "11:15", title: "The Neck Lookout Track", place: "Bruny Island", coords: [-43.2573, 147.353], kind: "lookout", note: "Boardwalk between north & south Bruny" },
+        { start: "10:05", end: "11:15", title: "The Neck Lookout Track", place: "Bruny Island", coords: [-43.2694, 147.3489], kind: "lookout", note: "Boardwalk between north & south Bruny" },
         { start: "11:15", end: "13:00", title: "Lunch — Get Shucked (optional)", place: "Get Shucked, Bruny Island", coords: [-43.242, 147.36], kind: "food", alt: true, note: "Famous Bruny oysters" },
         { start: "14:30", end: "14:50", title: "Ferry back — Roberts Point", place: "Roberts Point, Bruny Island", coords: [-43.1463, 147.2810], kind: "ferry" },
         { start: "16:00", end: "17:30", title: "Mount Wellington / kunanyi", place: "Mount Wellington summit", coords: [-42.8961, 147.2377], kind: "lookout", note: "1271 m — rug up!" },
