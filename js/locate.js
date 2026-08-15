@@ -11,7 +11,7 @@
  *
  * Public API (window.TripLocate):
  *   init()      — hide #locate-btn when geolocation is unsupported; wire the
- *                 click handler; append a privacy line under #locate-readout.
+ *                 click handler; fill the static ⓘ privacy tooltip text.
  *                 Returns nothing.
  *   locate()    — the click handler (also exposed for testing): resolve the
  *                 position, pick the itinerary stop you should be at, drop a
@@ -210,8 +210,8 @@
    * Wire up the feature. Returns nothing.
    * - Hides #locate-btn when geolocation is unsupported.
    * - Otherwise wires the click handler.
-   * - Appends a privacy line as a sibling directly under #locate-readout
-   *   (so locating in the readout doesn't erase it).
+   * - Fills the static ⓘ tooltip (#privacy-tip in index.html) with the
+   *   privacy sentence so the text lives in one place (JS-authoritative).
    */
   function init() {
     const btn = getEl("locate-btn");
@@ -224,10 +224,10 @@
       btn.addEventListener("click", locate);
     }
 
-    const privacy = doc.createElement("span");
-    privacy.className = "locate-privacy";
-    privacy.textContent = "Location stays on your device and is never stored.";
-    readout.parentNode.insertBefore(privacy, readout.nextSibling);
+    const tip = getEl("privacy-tip");
+    if (tip) {
+      tip.textContent = "Location stays on your device and is never stored.";
+    }
   }
 
   global.TripLocate = {

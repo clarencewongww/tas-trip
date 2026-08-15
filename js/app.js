@@ -32,6 +32,7 @@
 
   // Element references.
   let themeToggle = null;
+  let hero = null;        // <header class="hero"> — hidden once the trip starts
   let heroNow = null;
   let nowBar = null;
   let nowReadout = null;
@@ -110,14 +111,18 @@
   function setReadouts(st) {
     if (st.phase === "pre") {
       const c = st.countdown || { d: 0, h: 0, m: 0 };
-      heroNow.textContent = "Trip starts in " + c.d + "d " + c.h + "h " + c.m + "m";
+      // Hero shows only the live countdown value — the "Trip starts in" label
+      // is static markup in index.html. Skip it while previewing so the hero
+      // never reflects scrubbed (non-live) times.
+      if (previewTime === null) {
+        heroNow.textContent = c.d + "d " + c.h + "h " + c.m + "m";
+      }
       nowReadout.textContent = "Tasmania awaits";
       nowSub.textContent = fmt(global.TRIP.startISO) + " → " + fmt(global.TRIP.endISO);
       return;
     }
 
     if (st.phase === "post") {
-      heroNow.textContent = "Trip complete";
       nowReadout.textContent = "Home sweet home";
       nowSub.textContent = "";
       return;
@@ -126,7 +131,6 @@
     // ---- live ----
     const day = global.TRIP.days[st.dayIndex];
     if (!day) return;
-    heroNow.textContent = day.label || "";
 
     if (!st.inGap && st.entryIndex >= 0) {
       const e = day.entries[st.entryIndex];
@@ -176,9 +180,29 @@
   // ------------------------------------------------------------------
   // Live engine
   // ------------------------------------------------------------------
+
+  /**
+   * The hero is a live countdown only: once the trip start instant is reached
+   * the whole section disappears. `startISO` is read fresh so a stale page
+   * load (or a test that patches TRIP) hides it on the first tick/init.
+   * @returns {boolean} true when the hero is hidden (trip already started)
+   */
+  function updateHero() {
+    if (!hero) return false;
+    const trip = global.TRIP;
+    const startMs = trip && trip.startISO ? Date.parse(trip.startISO) : NaN;
+    if (!isFinite(startMs)) return hero.hidden; // unparseable — leave as-is
+    const hidden = Date.now() >= startMs;
+    if (hero.hidden !== hidden) hero.hidden = hidden;
+    return hidden;
+  }
+
   function tick() {
     if (previewTime !== null) return; // previewing — live engine paused
     if (!global.TripTimeline) return;
+
+    // Trip started? Hide the hero and stop touching its countdown.
+    if (updateHero()) return;
 
     let st;
     try {
@@ -305,7 +329,7 @@
   // ------------------------------------------------------------------
   function requireElements() {
     const ids = [
-      "theme-toggle", "hero-now", "now-bar", "now-readout", "now-sub",
+      "hero", "theme-toggle", "hero-now", "now-bar", "now-readout", "now-sub",
       "trip-progress-fill", "trip-comet", "trip-progress-track",
       "preview-scrubber", "live-btn", "preview-badge"
     ];
@@ -328,6 +352,7 @@
 
     const els = requireElements();
     if (!els) return;
+    hero = els["hero"];
     themeToggle = els["theme-toggle"];
     heroNow = els["hero-now"];
     nowBar = els["now-bar"];

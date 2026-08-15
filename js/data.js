@@ -58,9 +58,10 @@ window.TRIP = {
       id: "day-2",
       dateISO: "2026-11-16",
       label: "Mon 16 Nov",
-      title: "Swansea to St Helens",
-      town: "St Helens",
-      hotel: "St Helens — TBC",
+      title: "Swansea to Scamander",
+      town: "Scamander",
+      hotel: "Jack High — Airbnb",
+      hotelNote: "13 Wigram St, Scamander",
       origin: { title: "Depart — Swansea", coords: [-42.1226, 148.0702], departTime: "12:00" },
       entries: [
         { start: "09:00", end: "12:00", title: "Free morning — Swansea", place: "Swansea", coords: [-42.1226, 148.0702], kind: "free", note: "Lazy morning & breakfast" },
@@ -68,25 +69,25 @@ window.TRIP = {
         { start: "15:30", end: "16:00", title: "Cape Tourville Lighthouse", place: "Freycinet NP", coords: [-42.115, 148.339], kind: "lookout", note: "Easy 600 m boardwalk" },
         { start: "16:10", end: "16:50", title: "Honeymoon Bay", place: "Coles Bay", coords: [-42.1381, 148.2986], kind: "beach", note: "Quiet cove near Coles Bay" },
         { start: "17:00", end: "18:15", title: "Freycinet Marine Farm — seafood dinner", place: "Freycinet Marine Farm", coords: [-42.0746, 148.2329], kind: "food", note: "Fresh oysters & mussels" },
-        { start: "20:00", end: "23:59", title: "Check in — St Helens (hotel TBC)", place: "St Helens", coords: [-41.3205, 148.247], kind: "lodging" }
+        { start: "20:00", end: "23:59", title: "Check in — Jack High (Airbnb)", place: "13 Wigram St, Scamander", coords: [-41.4639, 148.2361], kind: "lodging" }
       ],
       legs: [
         { from: "Free morning — Swansea", to: "Wineglass Bay lookout walk", mode: "driving", fallbackKm: 50, fallbackMin: 50 },
         { from: "Wineglass Bay lookout walk", to: "Cape Tourville Lighthouse", mode: "driving", fallbackKm: 9, fallbackMin: 15 },
         { from: "Cape Tourville Lighthouse", to: "Honeymoon Bay", mode: "driving", fallbackKm: 6, fallbackMin: 10 },
         { from: "Honeymoon Bay", to: "Freycinet Marine Farm — seafood dinner", mode: "driving", fallbackKm: 27, fallbackMin: 25 },
-        { from: "Freycinet Marine Farm — seafood dinner", to: "Check in — St Helens (hotel TBC)", mode: "driving", fallbackKm: 110, fallbackMin: 100 }
+        { from: "Freycinet Marine Farm — seafood dinner", to: "Check in — Jack High (Airbnb)", mode: "driving", fallbackKm: 95, fallbackMin: 75 }
       ]
     },
     {
       id: "day-3",
       dateISO: "2026-11-17",
       label: "Tue 17 Nov",
-      title: "St Helens to Launceston",
+      title: "Scamander to Launceston",
       town: "Launceston",
       hotel: "Launceston — TBC",
       hotelNote: "2 nights",
-      origin: { title: "Depart — St Helens", coords: [-41.3205, 148.247], departTime: "08:45" },
+      origin: { title: "Depart — Scamander", coords: [-41.4639, 148.2361], departTime: "08:45" },
       entries: [
         { start: "09:00", end: "10:00", title: "Binalong Bay", place: "Binalong Bay", coords: [-41.2505, 148.3085], kind: "beach", note: "Orange lichen rocks" },
         { start: "10:30", end: "12:30", title: "Bay of Fires Conservation Area — The Gardens", place: "The Gardens", coords: [-41.165, 148.2925], kind: "park", note: "Beach walk between the boulders" },
@@ -94,7 +95,7 @@ window.TRIP = {
         { start: "16:00", end: "23:59", title: "Check in — Launceston (hotel TBC)", place: "Launceston", coords: [-41.4332, 147.1441], kind: "lodging", note: "2-night stay" }
       ],
       legs: [
-        { from: "Depart — St Helens", to: "Binalong Bay", mode: "driving", fallbackKm: 11, fallbackMin: 15 },
+        { from: "Depart — Scamander", to: "Binalong Bay", mode: "driving", fallbackKm: 26, fallbackMin: 25 },
         { from: "Binalong Bay", to: "Bay of Fires Conservation Area — The Gardens", mode: "driving", fallbackKm: 13, fallbackMin: 15 },
         { from: "Bay of Fires Conservation Area — The Gardens", to: "Lunch — St Helens", mode: "driving", fallbackKm: 24, fallbackMin: 30 },
         { from: "Lunch — St Helens", to: "Check in — Launceston (hotel TBC)", mode: "driving", fallbackKm: 183, fallbackMin: 165 }
@@ -157,10 +158,10 @@ window.TRIP = {
       origin: { title: "Depart — Travelodge Hobart", coords: [-42.886, 147.324], departTime: "08:00" },
       entries: [
         { start: "08:45", end: "09:10", title: "Kettering — Bruny Island ferry", place: "Kettering", coords: [-43.128, 147.2455], kind: "ferry", note: "Car ferry; ~20 min crossing" },
-        { start: "09:30", end: "09:55", title: "Bruny Island — Roberts Point", place: "Roberts Point, Bruny Island", coords: [-43.1515, 147.2635], kind: "ferry" },
+        { start: "09:30", end: "09:55", title: "Bruny Island — Roberts Point", place: "Roberts Point, Bruny Island", coords: [-43.1463, 147.2810], kind: "ferry" },
         { start: "10:05", end: "11:15", title: "The Neck Lookout Track", place: "Bruny Island", coords: [-43.2575, 147.3515], kind: "lookout", note: "Boardwalk between north & south Bruny" },
         { start: "11:15", end: "13:00", title: "Lunch — Get Shucked (optional)", place: "Get Shucked, Bruny Island", coords: [-43.242, 147.36], kind: "food", alt: true, note: "Famous Bruny oysters" },
-        { start: "14:30", end: "14:50", title: "Ferry back — Roberts Point", place: "Roberts Point, Bruny Island", coords: [-43.1515, 147.2635], kind: "ferry" },
+        { start: "14:30", end: "14:50", title: "Ferry back — Roberts Point", place: "Roberts Point, Bruny Island", coords: [-43.1463, 147.2810], kind: "ferry" },
         { start: "16:00", end: "17:30", title: "Mount Wellington / kunanyi", place: "Mount Wellington summit", coords: [-42.8961, 147.2377], kind: "lookout", note: "1271 m — rug up!" },
         { start: "17:45", end: "19:30", title: "Dinner — Salamanca (optional)", place: "Salamanca Place, Hobart", coords: [-42.8863, 147.3315], kind: "food", alt: true },
         { start: "21:10", end: "22:30", title: "Bonorong Wildlife Sanctuary — night tour", place: "Bonorong Wildlife Sanctuary", coords: [-42.7075, 147.2635], kind: "park", note: "Spot devils & quolls at night" },

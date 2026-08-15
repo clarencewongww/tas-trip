@@ -107,7 +107,7 @@
 
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <header class="hero">
+  <header class="hero" id="hero">
     <nav class="topbar" aria-label="Top bar">
       <span class="brand">
         <svg class="brand-mark" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-pin"/></svg>Tasmania Trip
@@ -120,10 +120,14 @@
         <svg class="theme-ico theme-ico--auto" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-monitor"/></svg>
       </button>
     </nav>
+    <!-- Exactly one h1 per page: visually hidden, the visible site title lives
+         in the topbar brand. The hero now shows only the live countdown. -->
+    <h1 class="sr-only">Tasmania Trip</h1>
     <div class="hero-content">
-      <h1 class="hero-title">Tasmania Trip</h1>
-      <p class="hero-subtitle">Tasmania road trip · 13–21 Nov 2026</p>
-      <p id="hero-now" class="hero-now" aria-live="polite">Loading…</p>
+      <p class="hero-countdown">
+        <span class="hero-countdown__label">Trip starts in</span>
+        <span id="hero-now" class="hero-now" aria-live="polite">Loading…</span>
+      </p>
     </div>
   </header>
 
@@ -142,6 +146,16 @@
         <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-locate"/></svg> Locate me
       </button>
       <span id="locate-readout" class="locate-readout" aria-live="polite"></span>
+      <span class="privacy">
+        <button type="button" id="privacy-btn" class="privacy-btn" aria-label="Privacy info" aria-describedby="privacy-tip">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8h.01"/>
+            <path d="M11 12h1v4h1"/>
+          </svg>
+        </button>
+        <span id="privacy-tip" class="privacy-tip" role="tooltip">Location stays on your device and is never stored.</span>
+      </span>
       <input type="range" id="preview-scrubber" min="0" max="1000" value="1000" step="1" aria-label="Preview trip time">
       <button class="btn" id="live-btn">Live</button>
       <span id="preview-badge" hidden>Previewing</span>
