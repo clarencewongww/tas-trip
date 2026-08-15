@@ -706,6 +706,11 @@ img, svg {
   border-radius: 10px 10px 0 0;
 }
 
+.day-note {
+  margin: 0;
+  padding: 16px 28px 0; /* align with .day-card__header's 28px inset */
+}
+
 .day-card__title {
   margin: 0;
   font-family: var(--font-display);
