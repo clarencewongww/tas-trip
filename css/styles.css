@@ -1135,6 +1135,24 @@ img, svg {
   background: var(--surface-2);
 }
 
+/* Google Maps link inside the trip popup (maps.js). Block-level so it sits on
+   its own line under the time/place meta; tokens adapt to both themes. */
+.trip-popup__gmaps {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85em;
+  color: var(--brand);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--brand) 55%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: color 150ms ease-out;
+}
+
+.trip-popup__gmaps:hover {
+  color: color-mix(in oklab, var(--brand) 72%, white);
+}
+
 /* Provisional straight-line route shown while OSRM resolves (maps.js adds
    className "route--pending" to the L.polyline, so this selector matches the
    SVG <path> element itself). Leaflet sets stroke/stroke-dasharray inline;

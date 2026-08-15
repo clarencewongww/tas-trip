@@ -623,6 +623,17 @@
         metaEl.textContent = metaPieces.join(" · ");
         content.appendChild(metaEl);
       }
+      // Google Maps link: curated gmapsQuery when the data provides one,
+      // otherwise fall back to "<title>, Tasmania, Australia".
+      const gmaps = doc.createElement("a");
+      gmaps.className = "trip-popup__gmaps";
+      gmaps.href =
+        "https://www.google.com/maps/search/?api=1&query=" +
+        encodeURIComponent(wp.gmapsQuery || (wp.title + ", Tasmania, Australia"));
+      gmaps.target = "_blank";
+      gmaps.rel = "noopener noreferrer";
+      gmaps.textContent = "View on Google Maps ↗";
+      content.appendChild(gmaps);
       marker.bindPopup(content);
 
       return marker;
