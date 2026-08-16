@@ -41,15 +41,15 @@ window.TRIP = {
       origin: { title: "Depart — Riverfront Motel", coords: [-42.8321, 147.2907], departTime: "08:15", gmapsQuery: "Riverfront Motel & Restaurant Hobart" },
       entries: [
         { start: "08:30", end: "10:30", title: "Farm Gate Market", place: "Bathurst St, Hobart", coords: [-42.8793, 147.3255], gmapsQuery: "Farm Gate Market Hobart", kind: "market", note: "Opens 8:30 am" },
-        { start: "12:15", end: "12:35", title: "Maingon Bay Lookout", place: "Tasman Peninsula", coords: [-43.093, 147.926], gmapsQuery: "Maingon Bay Lookout", kind: "lookout", note: "Coastal lookout near Port Arthur" },
+        { start: "12:15", end: "12:35", title: "Maingon Bay Lookout", place: "Tasman Peninsula", coords: [-43.188, 147.8451], gmapsQuery: "Maingon Bay Lookout", kind: "lookout", note: "Coastal lookout near Port Arthur" },
         { start: "13:00", end: "15:30", title: "Port Arthur Historic Site", place: "Port Arthur", coords: [-43.1477, 147.8513], gmapsQuery: "Port Arthur Historic Site", kind: "historic", note: "Allow ~2.5 h; tickets at gate" },
         { start: "15:30", end: "16:15", title: "Port Arthur Lavender", place: "Port Arthur", coords: [-43.1071, 147.8632], gmapsQuery: "Port Arthur Lavender", kind: "lavender", note: "Lavender fields & café on Arthur Hwy" },
         { start: "18:15", end: "23:59", title: "Check in — Airbnb", place: "2/7 Amos Place, Swansea", coords: [-42.1226, 148.0702], gmapsQuery: "2/7 Amos Place Swansea Tasmania", kind: "lodging" }
       ],
       legs: [
         { from: "Depart — Riverfront Motel", to: "Farm Gate Market", mode: "driving", fallbackKm: 6, fallbackMin: 10 },
-        { from: "Farm Gate Market", to: "Maingon Bay Lookout", mode: "driving", fallbackKm: 103, fallbackMin: 110 },
-        { from: "Maingon Bay Lookout", to: "Port Arthur Historic Site", mode: "driving", fallbackKm: 12, fallbackMin: 15 },
+        { from: "Farm Gate Market", to: "Maingon Bay Lookout", mode: "driving", fallbackKm: 115, fallbackMin: 100 },
+        { from: "Maingon Bay Lookout", to: "Port Arthur Historic Site", mode: "driving", fallbackKm: 6, fallbackMin: 8 },
         { from: "Port Arthur Historic Site", to: "Port Arthur Lavender", mode: "driving", fallbackKm: 6, fallbackMin: 8 },
         { from: "Port Arthur Lavender", to: "Check in — Airbnb", mode: "driving", fallbackKm: 152, fallbackMin: 120 }
       ]
@@ -112,15 +112,15 @@ window.TRIP = {
       origin: { title: "Depart — Launceston", coords: [-41.4332, 147.1441], departTime: "10:00", gmapsQuery: "Launceston Tasmania" },
       entries: [
         { start: "10:45", end: "12:15", title: "Bridestowe Lavender Estate", place: "Nabowla", coords: [-41.141, 147.336], gmapsQuery: "Bridestowe Lavender Estate", kind: "lavender", note: "Peak lavender bloom in November" },
-        { start: "12:40", end: "13:30", title: "Lavender House Perfumery", place: "Lilydale", coords: [-41.245, 147.223], gmapsQuery: "Lavender House Perfumery", kind: "lavender" },
+        { start: "12:40", end: "13:30", title: "Lavender House Perfumery", place: "Rowella", coords: [-41.1809, 146.9145], gmapsQuery: "Lavender House Perfumery", kind: "lavender" },
         { start: "14:00", end: "15:00", title: "Tamar Island Wetlands Centre", place: "Tamar Island", coords: [-41.387, 147.082], gmapsQuery: "Tamar Island Wetlands Centre", kind: "park", note: "Boardwalk & birdlife" },
         { start: "15:20", end: "17:30", title: "Cataract Gorge Reserve", place: "Launceston", coords: [-41.444, 147.119], gmapsQuery: "Cataract Gorge Reserve Launceston", kind: "park", note: "Walk the suspension bridge" },
         { start: "17:30", end: "23:59", title: "Evening free — Launceston", place: "Launceston", coords: [-41.4332, 147.1441], gmapsQuery: "Launceston Tasmania", kind: "free", note: "Dinner in the city" }
       ],
       legs: [
         { from: "Depart — Launceston", to: "Bridestowe Lavender Estate", mode: "driving", fallbackKm: 47, fallbackMin: 45 },
-        { from: "Bridestowe Lavender Estate", to: "Lavender House Perfumery", mode: "driving", fallbackKm: 18, fallbackMin: 25 },
-        { from: "Lavender House Perfumery", to: "Tamar Island Wetlands Centre", mode: "driving", fallbackKm: 29, fallbackMin: 30 },
+        { from: "Bridestowe Lavender Estate", to: "Lavender House Perfumery", mode: "driving", fallbackKm: 45, fallbackMin: 45 },
+        { from: "Lavender House Perfumery", to: "Tamar Island Wetlands Centre", mode: "driving", fallbackKm: 28, fallbackMin: 28 },
         { from: "Tamar Island Wetlands Centre", to: "Cataract Gorge Reserve", mode: "driving", fallbackKm: 12, fallbackMin: 20 },
         { from: "Cataract Gorge Reserve", to: "Evening free — Launceston", mode: "driving", fallbackKm: 4, fallbackMin: 10 }
       ]
