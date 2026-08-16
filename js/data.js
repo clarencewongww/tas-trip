@@ -142,10 +142,10 @@ window.TRIP = {
       entries: [
         { start: "08:45", end: "11:30", title: "Dove Lake Circuit walk", place: "Dove Lake, Cradle Mountain", coords: [-41.6552, 145.9609], gmapsQuery: "Dove Lake Cradle Mountain", kind: "hike", note: "2–3 h loop beneath Cradle Mountain" },
         { start: "11:45", end: "12:30", title: "Lunch — Cradle Mountain visitor centre", place: "Cradle Mountain visitor centre", coords: [-41.5835, 145.9368], gmapsQuery: "Cradle Mountain Visitor Centre", kind: "food" },
-        { start: "12:45", end: "13:10", title: "Enchanted Walk", place: "Cradle Mountain", coords: [-41.588, 145.939], gmapsQuery: "Enchanted Walk Cradle Mountain", kind: "hike", note: "20-min loop — wombats are out in the afternoon" },
-        { start: "13:20", end: "13:40", title: "Pencil Pine Falls & Rainforest Walk", place: "Cradle Mountain Interpretation Centre", coords: [-41.5851, 145.9394], gmapsQuery: "Pencil Pine Falls Cradle Mountain", kind: "hike", note: "10-min all-weather boardwalk" },
-        { start: "14:00", end: "14:40", title: "Cradle Mountain Wilderness Gallery", place: "Cradle Mountain Hotel", coords: [-41.5712, 145.9266], gmapsQuery: "Cradle Mountain Wilderness Gallery", kind: "park", note: "Free entry — 9 exhibition rooms" },
-        { start: "15:00", end: "15:45", title: "Devils@Cradle — keeper tour", place: "3950 Cradle Mountain Rd", coords: [-41.5688, 145.924], gmapsQuery: "Devils at Cradle Tasmania", kind: "park", note: "3 pm keeper tour · family (2 adults + 3 kids) $90" },
+        { start: "12:45", end: "13:10", title: "Enchanted Walk", place: "Cradle Mountain", coords: [-41.5958, 145.9291], gmapsQuery: "Enchanted Walk Cradle Mountain", kind: "hike", note: "20-min loop — wombats are out in the afternoon" },
+        { start: "13:20", end: "13:40", title: "Pencil Pine Falls & Rainforest Walk", place: "Cradle Mountain Interpretation Centre", coords: [-41.5958, 145.9309], gmapsQuery: "Pencil Pine Falls Cradle Mountain", kind: "hike", note: "10-min all-weather boardwalk" },
+        { start: "14:00", end: "14:40", title: "Cradle Mountain Wilderness Gallery", place: "Cradle Mountain Hotel", coords: [-41.5736, 145.9346], gmapsQuery: "Cradle Mountain Wilderness Gallery", kind: "park", note: "Free entry — 9 exhibition rooms" },
+        { start: "15:00", end: "15:45", title: "Devils@Cradle — keeper tour", place: "3950 Cradle Mountain Rd", coords: [-41.5899, 145.9325], gmapsQuery: "Devils at Cradle Tasmania", kind: "park", note: "3 pm keeper tour · family (2 adults + 3 kids) $90" },
         { start: "17:30", end: "18:30", title: "Dinner — Deloraine Hotel", place: "Deloraine", coords: [-41.5243, 146.6571], gmapsQuery: "Deloraine Hotel Tasmania", kind: "food", note: "Wood-fired pizzas & schnitzels · kitchen till 8 pm" },
         { start: "21:30", end: "23:59", title: "Check in — Travelodge Hotel Hobart", place: "Travelodge Hotel Hobart", coords: [-42.8855, 147.3262], gmapsQuery: "Travelodge Hotel Hobart", kind: "lodging", note: "Late check-in — reception is open 24 hours" },
         { start: "22:00", end: "22:45", title: "Kmart New Town", place: "New Town, Hobart", coords: [-42.856, 147.3059], gmapsQuery: "Kmart New Town Hobart", kind: "shopping", alt: true, note: "Open 24 hours — or grab supplies Friday morning" }
@@ -156,7 +156,7 @@ window.TRIP = {
         { from: "Lunch — Cradle Mountain visitor centre", to: "Enchanted Walk", mode: "driving", fallbackKm: 2, fallbackMin: 5 },
         { from: "Enchanted Walk", to: "Pencil Pine Falls & Rainforest Walk", mode: "driving", fallbackKm: 1, fallbackMin: 3 },
         { from: "Pencil Pine Falls & Rainforest Walk", to: "Cradle Mountain Wilderness Gallery", mode: "driving", fallbackKm: 3, fallbackMin: 5 },
-        { from: "Cradle Mountain Wilderness Gallery", to: "Devils@Cradle — keeper tour", mode: "driving", fallbackKm: 1, fallbackMin: 3 },
+        { from: "Cradle Mountain Wilderness Gallery", to: "Devils@Cradle — keeper tour", mode: "driving", fallbackKm: 3, fallbackMin: 6 },
         { from: "Devils@Cradle — keeper tour", to: "Dinner — Deloraine Hotel", mode: "driving", fallbackKm: 95, fallbackMin: 85 },
         { from: "Dinner — Deloraine Hotel", to: "Check in — Travelodge Hotel Hobart", mode: "driving", fallbackKm: 205, fallbackMin: 175 },
         { from: "Check in — Travelodge Hotel Hobart", to: "Kmart New Town", mode: "driving", fallbackKm: 4, fallbackMin: 7 }
