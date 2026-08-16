@@ -5,11 +5,28 @@ window.TRIP = {
   name: "Tasmania Trip",
   subtitle: "Tasmania road trip · 13–21 Nov 2026",
   tz: "Australia/Hobart",
-  startISO: "2026-11-13T23:40:00+11:00",
+  startISO: "2026-11-14T02:40:00+11:00",
   endISO: "2026-11-22T00:35:00+11:00",
   days: [
     {
       id: "day-0",
+      dateISO: "2026-11-13",
+      label: "Fri 13 Nov",
+      title: "Departure — Singapore to Melbourne",
+      town: "Singapore",
+      hotel: "—",
+      notes: ["Times shown are Singapore time (SGT = AEDT − 3 h)."],
+      origin: null,
+      entries: [
+        { start: "21:10", end: "23:40", title: "Reach Changi Airport for check-in", place: "Singapore Changi Airport (SIN)", coords: [1.3644, 103.9915], gmapsQuery: "Singapore Changi Airport", kind: "flight", note: "Be at the airport by 9:10 pm SGT · check-in closes 22:40" },
+        { start: "23:40", end: "23:59", title: "Flight Singapore → Melbourne", place: "Singapore Changi Airport (SIN)", coords: [1.3644, 103.9915], gmapsQuery: "Singapore Changi Airport", kind: "flight", note: "Departs 11:40 pm SGT (2:40 am Hobart time) · lands Melbourne 10:20 am" }
+      ],
+      legs: [
+        { from: "Reach Changi Airport for check-in", to: "Flight Singapore → Melbourne", mode: "flight", fallbackMin: 150 }
+      ]
+    },
+    {
+      id: "day-1",
       dateISO: "2026-11-14",
       label: "Sat 14 Nov",
       title: "Arrival — Melbourne to Hobart",
@@ -31,7 +48,7 @@ window.TRIP = {
       ]
     },
     {
-      id: "day-1",
+      id: "day-2",
       dateISO: "2026-11-15",
       label: "Sun 15 Nov",
       title: "Hobart to Swansea",
@@ -42,7 +59,7 @@ window.TRIP = {
       entries: [
         { start: "08:30", end: "10:30", title: "Farm Gate Market", place: "Bathurst St, Hobart", coords: [-42.8814, 147.3251], gmapsQuery: "Farm Gate Market Hobart", kind: "market", note: "Opens 8:30 am" },
         { start: "12:15", end: "12:35", title: "Maingon Bay Lookout", place: "Tasman Peninsula", coords: [-43.188, 147.8451], gmapsQuery: "Maingon Bay Lookout", kind: "lookout", note: "Coastal lookout near Port Arthur" },
-        { start: "13:00", end: "15:30", title: "Port Arthur Historic Site", place: "Port Arthur", coords: [-43.1458, 147.8505], gmapsQuery: "Port Arthur Historic Site", kind: "historic", note: "Allow ~2.5 h; book tickets ahead" },
+        { start: "13:00", end: "15:30", title: "Port Arthur Historic Site", place: "Port Arthur", coords: [-43.1458, 147.8505], gmapsQuery: "Port Arthur Historic Site", kind: "historic", note: "Allow ~2.5 h; book tickets ahead · adult $55, child $27.50 · valid 2 days" },
         { start: "15:30", end: "16:15", title: "Port Arthur Lavender", place: "Port Arthur", coords: [-43.1071, 147.8632], gmapsQuery: "Port Arthur Lavender", kind: "lavender", note: "Lavender fields & café on Arthur Hwy · café closes 4 pm" },
         { start: "18:15", end: "23:59", title: "Check in — Airbnb", place: "2/7 Amos Place, Swansea", coords: [-42.1226, 148.0702], gmapsQuery: "7 Amos Place Swansea Tasmania", kind: "lodging" }
       ],
@@ -55,7 +72,7 @@ window.TRIP = {
       ]
     },
     {
-      id: "day-2",
+      id: "day-3",
       dateISO: "2026-11-16",
       label: "Mon 16 Nov",
       title: "Swansea to Scamander",
@@ -65,7 +82,7 @@ window.TRIP = {
       origin: { title: "Depart — Swansea", coords: [-42.1226, 148.0702], departTime: "12:00", gmapsQuery: "7 Amos Place Swansea Tasmania" },
       entries: [
         { start: "09:00", end: "12:00", title: "Free morning — Swansea", place: "Swansea", coords: [-42.1226, 148.0702], gmapsQuery: "7 Amos Place Swansea Tasmania", kind: "free", note: "Lazy morning & breakfast" },
-        { start: "13:00", end: "15:30", title: "Wineglass Bay lookout walk", place: "Freycinet NP car park", coords: [-42.1365, 148.303], gmapsQuery: "Wineglass Bay Lookout", kind: "hike", note: "~1–1.5 h return to the lookout" },
+        { start: "13:00", end: "15:30", title: "Wineglass Bay lookout walk", place: "Freycinet NP car park", coords: [-42.1365, 148.303], gmapsQuery: "Wineglass Bay Lookout", kind: "hike", note: "~1–1.5 h return to the lookout · covered by Holiday Pass ($98.35/car)" },
         { start: "15:15", end: "15:45", title: "Cape Tourville Lighthouse", place: "Freycinet NP", coords: [-42.1227, 148.343], gmapsQuery: "Cape Tourville Lighthouse", kind: "lookout", note: "Easy 600 m boardwalk" },
         { start: "15:55", end: "16:35", title: "Honeymoon Bay", place: "Coles Bay", coords: [-42.1381, 148.2986], gmapsQuery: "Honeymoon Bay Freycinet", kind: "beach", note: "Quiet cove near Coles Bay" },
         { start: "17:00", end: "17:30", title: "Freycinet Marine Farm — oyster stop", place: "Freycinet Marine Farm", coords: [-42.0746, 148.2329], gmapsQuery: "Freycinet Marine Farm Coles Bay", kind: "food", note: "Raw oyster bar till 5 pm — order straight away" },
@@ -82,46 +99,46 @@ window.TRIP = {
       ]
     },
     {
-      id: "day-3",
+      id: "day-4",
       dateISO: "2026-11-17",
       label: "Tue 17 Nov",
       title: "Scamander to Launceston",
       town: "Launceston",
-      hotel: "Launceston — TBC",
+      hotel: "Commodore Regent",
       hotelNote: "1 night",
       origin: { title: "Depart — Scamander", coords: [-41.4639, 148.2361], departTime: "08:45", gmapsQuery: "13 Wigram Street Scamander Tasmania" },
       entries: [
         { start: "09:00", end: "10:00", title: "Binalong Bay", place: "Binalong Bay", coords: [-41.2515, 148.3111], gmapsQuery: "Binalong Bay", kind: "beach", note: "Orange lichen rocks" },
         { start: "10:30", end: "12:00", title: "Bay of Fires Conservation Area — The Gardens", place: "The Gardens", coords: [-41.1634, 148.2827], gmapsQuery: "The Gardens Bay of Fires", kind: "park", note: "Beach walk between the boulders" },
         { start: "12:30", end: "13:30", title: "Lunch — St Helens", place: "St Helens", coords: [-41.3218, 148.2498], gmapsQuery: "St Helens Tasmania", kind: "food", note: "Wharf Bar & Kitchen open till 2:30 pm — Bayside Bistro as backup" },
-        { start: "16:15", end: "23:59", title: "Check in — Launceston (hotel TBC)", place: "Launceston", coords: [-41.4332, 147.1441], gmapsQuery: "Launceston Tasmania", kind: "lodging", note: "1-night stay" }
+        { start: "16:15", end: "23:59", title: "Check in — Commodore Regent Launceston", place: "13 Brisbane St, Launceston", coords: [-41.4334, 147.1439], gmapsQuery: "Commodore Regent Launceston", kind: "lodging", note: "1-night stay · check-in from 2 pm" }
       ],
       legs: [
         { from: "Depart — Scamander", to: "Binalong Bay", mode: "driving", fallbackKm: 28, fallbackMin: 25 },
         { from: "Binalong Bay", to: "Bay of Fires Conservation Area — The Gardens", mode: "driving", fallbackKm: 15, fallbackMin: 15 },
         { from: "Bay of Fires Conservation Area — The Gardens", to: "Lunch — St Helens", mode: "driving", fallbackKm: 24, fallbackMin: 22 },
-        { from: "Lunch — St Helens", to: "Check in — Launceston (hotel TBC)", mode: "driving", fallbackKm: 183, fallbackMin: 165 }
+        { from: "Lunch — St Helens", to: "Check in — Commodore Regent Launceston", mode: "driving", fallbackKm: 183, fallbackMin: 165 }
       ]
     },
     {
-      id: "day-4",
+      id: "day-5",
       dateISO: "2026-11-18",
       label: "Wed 18 Nov",
       title: "Launceston to Cradle Mountain",
       town: "Cradle Mountain",
       hotel: "Discovery Resorts — Cradle Mountain",
       hotelNote: "Deluxe 2-bed cabin · sleeps 6",
-      origin: { title: "Depart — Launceston", coords: [-41.4332, 147.1441], departTime: "10:00", gmapsQuery: "Launceston Tasmania" },
+      origin: { title: "Depart — Commodore Regent", coords: [-41.4334, 147.1439], departTime: "10:00", gmapsQuery: "Commodore Regent Launceston" },
       entries: [
-        { start: "10:45", end: "12:15", title: "Bridestowe Lavender Estate", place: "Nabowla", coords: [-41.1283, 147.3414], gmapsQuery: "Bridestowe Lavender Estate", kind: "lavender", note: "Peak bloom Dec–Jan — fields are green in November" },
+        { start: "10:45", end: "12:15", title: "Bridestowe Lavender Estate", place: "Nabowla", coords: [-41.1283, 147.3414], gmapsQuery: "Bridestowe Lavender Estate", kind: "lavender", note: "Peak bloom Dec–Jan — fields are green in November · free entry" },
         { start: "13:05", end: "13:55", title: "Lavender House Perfumery", place: "Rowella", coords: [-41.1796, 146.912], gmapsQuery: "Lavender House Perfumery", kind: "lavender" },
         { start: "14:25", end: "15:25", title: "Tamar Island Wetlands Centre", place: "Tamar Island", coords: [-41.3912, 147.0737], gmapsQuery: "Tamar Island Wetlands Centre", kind: "park", note: "Main boardwalk closed until 17 Dec — bird-hide walk only" },
-        { start: "15:40", end: "17:30", title: "Cataract Gorge Reserve", place: "Launceston", coords: [-41.4466, 147.1201], gmapsQuery: "Cataract Gorge Reserve Launceston", kind: "park", note: "Chairlift last ride 4:45 pm — ride it first, then walk the bridge" },
+        { start: "15:40", end: "17:30", title: "Cataract Gorge Reserve", place: "Launceston", coords: [-41.4466, 147.1201], gmapsQuery: "Cataract Gorge Reserve Launceston", kind: "park", note: "Chairlift last ride 4:45 pm — ride it first, then walk the bridge · return $20 adult" },
         { start: "17:30", end: "18:15", title: "Early dinner — Launceston", place: "Launceston", coords: [-41.4332, 147.1441], gmapsQuery: "Launceston Tasmania", kind: "free", note: "Early dinner before the drive west" },
         { start: "20:00", end: "23:59", title: "Check in — Discovery Resorts Cradle Mountain", place: "3816 Cradle Mountain Rd", coords: [-41.5802, 145.9378], kind: "lodging", gmapsQuery: "Discovery Resorts - Cradle Mountain", note: "Reception closes 5 pm — call (03) 6492 1395 ahead for the after-hours key" }
       ],
       legs: [
-        { from: "Depart — Launceston", to: "Bridestowe Lavender Estate", mode: "driving", fallbackKm: 50, fallbackMin: 50 },
+        { from: "Depart — Commodore Regent", to: "Bridestowe Lavender Estate", mode: "driving", fallbackKm: 50, fallbackMin: 50 },
         { from: "Bridestowe Lavender Estate", to: "Lavender House Perfumery", mode: "driving", fallbackKm: 50, fallbackMin: 45 },
         { from: "Lavender House Perfumery", to: "Tamar Island Wetlands Centre", mode: "driving", fallbackKm: 28, fallbackMin: 28 },
         { from: "Tamar Island Wetlands Centre", to: "Cataract Gorge Reserve", mode: "driving", fallbackKm: 12, fallbackMin: 20 },
@@ -130,7 +147,7 @@ window.TRIP = {
       ]
     },
     {
-      id: "day-5",
+      id: "day-6",
       dateISO: "2026-11-19",
       label: "Thu 19 Nov",
       title: "Cradle Mountain to Hobart",
@@ -140,12 +157,12 @@ window.TRIP = {
       notes: ["Travelodge Family Room sleeps 4 — confirm 2 rooms for 5 people when booking."],
       origin: { title: "Depart — Discovery Resorts Cradle Mountain", coords: [-41.5802, 145.9378], departTime: "07:30", gmapsQuery: "Discovery Resorts - Cradle Mountain" },
       entries: [
-        { start: "08:45", end: "11:30", title: "Dove Lake Circuit walk", place: "Dove Lake, Cradle Mountain", coords: [-41.6552, 145.9609], gmapsQuery: "Dove Lake Cradle Mountain", kind: "hike", note: "2–3 h loop beneath Cradle Mountain" },
+        { start: "08:45", end: "11:30", title: "Dove Lake Circuit walk", place: "Dove Lake, Cradle Mountain", coords: [-41.6552, 145.9609], gmapsQuery: "Dove Lake Cradle Mountain", kind: "hike", note: "2–3 h loop beneath Cradle Mountain · Holiday Pass $98.35/car + shuttle $15.50/adult" },
         { start: "11:45", end: "12:30", title: "Lunch — Cradle Mountain visitor centre", place: "Cradle Mountain visitor centre", coords: [-41.5835, 145.9368], gmapsQuery: "Cradle Mountain Visitor Centre", kind: "food" },
         { start: "12:45", end: "13:10", title: "Enchanted Walk", place: "Cradle Mountain", coords: [-41.5958, 145.9291], gmapsQuery: "Enchanted Walk Cradle Mountain", kind: "hike", note: "20-min loop — wombats are out in the afternoon" },
         { start: "13:20", end: "13:40", title: "Pencil Pine Falls & Rainforest Walk", place: "Cradle Mountain Interpretation Centre", coords: [-41.5958, 145.9309], gmapsQuery: "Pencil Pine Falls Cradle Mountain", kind: "hike", note: "10-min all-weather boardwalk" },
         { start: "14:00", end: "14:40", title: "Cradle Mountain Wilderness Gallery", place: "Cradle Mountain Hotel", coords: [-41.5736, 145.9346], gmapsQuery: "Cradle Mountain Wilderness Gallery", kind: "park", note: "Free entry — 9 exhibition rooms" },
-        { start: "15:00", end: "15:45", title: "Devils@Cradle — keeper tour", place: "3950 Cradle Mountain Rd", coords: [-41.5899, 145.9325], gmapsQuery: "Devils at Cradle Tasmania", kind: "park", note: "3 pm keeper tour · family (2 adults + 3 kids) $90" },
+        { start: "15:00", end: "15:45", title: "Devils@Cradle — keeper tour", place: "3950 Cradle Mountain Rd", coords: [-41.5899, 145.9325], gmapsQuery: "Devils at Cradle Tasmania", kind: "park", note: "3 pm keeper tour included in entry · $27.50/adult — 5 adults $137.50" },
         { start: "17:30", end: "18:30", title: "Dinner — Deloraine Hotel", place: "Deloraine", coords: [-41.5243, 146.6571], gmapsQuery: "Deloraine Hotel Tasmania", kind: "food", note: "Wood-fired pizzas & schnitzels · kitchen till 8 pm" },
         { start: "21:30", end: "23:59", title: "Check in — Travelodge Hotel Hobart", place: "Travelodge Hotel Hobart", coords: [-42.8855, 147.3262], gmapsQuery: "Travelodge Hotel Hobart", kind: "lodging", note: "Late check-in — reception is open 24 hours" },
         { start: "22:00", end: "22:45", title: "Kmart New Town", place: "New Town, Hobart", coords: [-42.856, 147.3059], gmapsQuery: "Kmart New Town Hobart", kind: "shopping", alt: true, note: "Open 24 hours — or grab supplies Friday morning" }
@@ -163,7 +180,7 @@ window.TRIP = {
       ]
     },
     {
-      id: "day-6",
+      id: "day-7",
       dateISO: "2026-11-20",
       label: "Fri 20 Nov",
       title: "Bruny Island & Hobart",
@@ -172,7 +189,7 @@ window.TRIP = {
       notes: ["Alternative: swap Mount Wellington for MONA (closes 5 pm — better as a morning swap with Bruny)."],
       origin: { title: "Depart — Travelodge Hobart", coords: [-42.8855, 147.3262], departTime: "08:00", gmapsQuery: "Travelodge Hotel Hobart" },
       entries: [
-        { start: "08:45", end: "09:10", title: "Kettering — Bruny Island ferry", place: "Kettering", coords: [-43.1274, 147.2555], gmapsQuery: "Bruny Island Ferry Kettering", kind: "ferry", note: "Car ferry; ~20 min crossing" },
+        { start: "08:45", end: "09:10", title: "Kettering — Bruny Island ferry", place: "Kettering", coords: [-43.1274, 147.2555], gmapsQuery: "Bruny Island Ferry Kettering", kind: "ferry", note: "Car ferry; ~20 min crossing · car return $58.60, passengers free" },
         { start: "09:30", end: "09:55", title: "Bruny Island — Roberts Point", place: "Roberts Point, Bruny Island", coords: [-43.1431, 147.2868], gmapsQuery: "Bruny Island Ferry Terminal", kind: "ferry" },
         { start: "10:05", end: "11:15", title: "The Neck Lookout Track", place: "Bruny Island", coords: [-43.2694, 147.3489], gmapsQuery: "Truganini Lookout Bruny Island", kind: "lookout", note: "Boardwalk between north & south Bruny" },
         { start: "11:15", end: "13:00", title: "Lunch — Get Shucked (optional)", place: "Get Shucked, Bruny Island", coords: [-43.1975, 147.3871], gmapsQuery: "Get Shucked Bruny Island", kind: "food", alt: true, note: "Famous Bruny oysters" },
@@ -195,7 +212,7 @@ window.TRIP = {
       ]
     },
     {
-      id: "day-7",
+      id: "day-8",
       dateISO: "2026-11-21",
       label: "Sat 21 Nov",
       title: "Departure",
@@ -204,7 +221,7 @@ window.TRIP = {
       origin: { title: "Depart — Travelodge Hobart", coords: [-42.8855, 147.3262], departTime: "08:15", gmapsQuery: "Travelodge Hotel Hobart" },
       entries: [
         { start: "08:30", end: "10:00", title: "Salamanca Market", place: "Salamanca Place, Hobart", coords: [-42.8863, 147.3315], gmapsQuery: "Salamanca Market Hobart", kind: "market", note: "Saturday market, opens 8:30 am" },
-        { start: "10:20", end: "10:50", title: "Car drop-off — Hobart Airport", place: "Hobart Airport (HBA)", coords: [-42.8375, 147.5116], gmapsQuery: "Hobart Airport", kind: "transit" },
+        { start: "10:20", end: "10:50", title: "Car drop-off — Hobart Airport", place: "Hobart Airport (HBA)", coords: [-42.8375, 147.5116], gmapsQuery: "Hobart Airport", kind: "transit", note: "Be at the airport by 10:10 for the 11:25 flight" },
         { start: "11:25", end: "13:10", title: "Flight Hobart → Sydney", place: "Sydney Airport (SYD)", coords: [-33.95, 151.1817], gmapsQuery: "Sydney Airport", kind: "flight" },
         { start: "16:30", end: "00:35", title: "Flight Sydney → Singapore", place: "Singapore Changi Airport (SIN)", coords: [1.3644, 103.9915], gmapsQuery: "Singapore Changi Airport", kind: "flight", note: "Arrives 21:35 Singapore time (00:35 Hobart time)" }
       ],
