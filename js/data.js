@@ -112,9 +112,9 @@ window.TRIP = {
       origin: { title: "Depart — Launceston", coords: [-41.4332, 147.1441], departTime: "10:00", gmapsQuery: "Launceston Tasmania" },
       entries: [
         { start: "10:45", end: "12:15", title: "Bridestowe Lavender Estate", place: "Nabowla", coords: [-41.141, 147.336], gmapsQuery: "Bridestowe Lavender Estate", kind: "lavender", note: "Peak lavender bloom in November" },
-        { start: "12:40", end: "13:30", title: "Lavender House Perfumery", place: "Rowella", coords: [-41.1809, 146.9145], gmapsQuery: "Lavender House Perfumery", kind: "lavender" },
-        { start: "14:00", end: "15:00", title: "Tamar Island Wetlands Centre", place: "Tamar Island", coords: [-41.387, 147.082], gmapsQuery: "Tamar Island Wetlands Centre", kind: "park", note: "Boardwalk & birdlife" },
-        { start: "15:20", end: "17:30", title: "Cataract Gorge Reserve", place: "Launceston", coords: [-41.444, 147.119], gmapsQuery: "Cataract Gorge Reserve Launceston", kind: "park", note: "Walk the suspension bridge" },
+        { start: "13:05", end: "13:55", title: "Lavender House Perfumery", place: "Rowella", coords: [-41.1809, 146.9145], gmapsQuery: "Lavender House Perfumery", kind: "lavender" },
+        { start: "14:25", end: "15:25", title: "Tamar Island Wetlands Centre", place: "Tamar Island", coords: [-41.387, 147.082], gmapsQuery: "Tamar Island Wetlands Centre", kind: "park", note: "Boardwalk & birdlife" },
+        { start: "15:40", end: "17:30", title: "Cataract Gorge Reserve", place: "Launceston", coords: [-41.444, 147.119], gmapsQuery: "Cataract Gorge Reserve Launceston", kind: "park", note: "Walk the suspension bridge" },
         { start: "17:30", end: "23:59", title: "Evening free — Launceston", place: "Launceston", coords: [-41.4332, 147.1441], gmapsQuery: "Launceston Tasmania", kind: "free", note: "Dinner in the city" }
       ],
       legs: [
