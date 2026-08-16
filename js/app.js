@@ -138,11 +138,14 @@
         heroNow.textContent = formatCountdown(isFinite(startMs) ? startMs - Date.now() : 0);
       }
       nowReadout.textContent = "Tasmania awaits";
-      // Rail range: start = flight departure (startISO); end = the LAST trip
-      // day, not endISO (a post-midnight arrival that overruns the calendar).
+      // Rail range: first itinerary day → LAST trip day (not endISO — a
+      // post-midnight arrival overruns the calendar). startISO would render
+      // as the flight's Hobart-time date, not the departure calendar day.
+      const firstDay = global.TRIP.days[0];
       const lastDay = global.TRIP.days[global.TRIP.days.length - 1];
       nowSub.textContent =
-        fmt(global.TRIP.startISO) + " → " +
+        (firstDay && firstDay.dateISO ? fmt(firstDay.dateISO) : fmt(global.TRIP.startISO)) +
+        " → " +
         (lastDay && lastDay.dateISO ? fmt(lastDay.dateISO) : fmt(global.TRIP.endISO));
       return;
     }
