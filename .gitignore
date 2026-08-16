@@ -4,3 +4,6 @@ schedule/
 
 # Handover doc — never commit
 PROGRESS.md
+
+# User screenshot folder — never commit
+updates/
