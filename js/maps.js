@@ -144,6 +144,50 @@
     return currentBase === "sat" ? "light" : effectiveTheme();
   }
 
+  /** Style object for a route line kind. Shared by the initial draw (drawLeg)
+   *  and redrawRoutes so a basemap/theme switch re-styles already-drawn routes
+   *  exactly as if they had been drawn after the switch. The sat
+   *  white-main/dark-casing treatment is applied by addRouteLine itself via its
+   *  currentBase branch — this helper only owns the non-sat style params. */
+  function styleFor(kind) {
+    if (kind === "route") {
+      return {
+        color: BRAND_COLOR,
+        weight: 4,
+        opacity: effectiveTheme() === "dark" ? 0.9 : 0.8,
+        haloWeight: 7
+      };
+    }
+    if (kind === "water") {
+      return {
+        dashArray: "6 10",
+        color: WATER_COLOR,
+        weight: 3,
+        opacity: 0.8,
+        haloWeight: 5
+      };
+    }
+    if (kind === "pending") {
+      return {
+        dashArray: "4 8",
+        color: FALLBACK_COLOR,
+        weight: 3,
+        opacity: 0.8,
+        haloWeight: 5,
+        className: "route--pending"
+      };
+    }
+    // "estimate" — dashed accent-orange estimate (same dash params as pending,
+    // but without the route--pending CSS class that drives the animation).
+    return {
+      dashArray: "4 8",
+      color: FALLBACK_COLOR,
+      weight: 3,
+      opacity: 0.8,
+      haloWeight: 5
+    };
+  }
+
   // ------------------------------------------------------------------
   // Coordinate helpers
   // ------------------------------------------------------------------
@@ -654,6 +698,24 @@
     // driving legs resolve asynchronously. Exposed live on the api.
     const legResults = new Array(Math.max(0, waypoints.length - 1)).fill(null);
 
+    // Drawn route geometry + live layers, keyed by leg index. Kept so a
+    // basemap/theme switch can tear down and re-draw every route line with the
+    // new styling (sat: white main + dark casing; dark "map": white halo +
+    // green main; light: single green main).
+    const legShapes = new Array(legResults.length).fill(null);
+    const routeLayers = [];
+    // Provisional (route--pending) layers per leg. redrawRoutes may replace
+    // them while OSRM is still resolving, so drawLeg's removePending must
+    // remove the CURRENT pending layers, not the stale first-draw ones.
+    const pendingLayersByLeg = new Array(legResults.length).fill(null);
+
+    function recordRouteLayers(layers) {
+      if (!layers) return;
+      for (let k = 0; k < layers.length; k++) {
+        routeLayers.push(layers[k]);
+      }
+    }
+
     function findLeg(a, b) {
       if (win.TripData && typeof win.TripData.findLeg === "function") {
         // TripData.findLeg: exact title match, then coordinate match (e.g.
@@ -735,6 +797,7 @@
       // call and the phantom 0 km / 1 min line, but keep the result slot
       // indexed in itinerary order.
       if (sameCoords(a.coords, b.coords)) {
+        legShapes[i] = null;
         if (!destroyed) {
           setLegResult(i, a.title, b.title, 0, 0, "skip", "skip");
         }
@@ -749,47 +812,40 @@
         // connecting path is visible while OSRM resolves. Replaced by the
         // routed solid line on success or the dashed estimate on failure —
         // either way the provisional layers are removed first.
-        let pendingLayers = null;
         if (!destroyed) {
-          pendingLayers = addRouteLine([a.coords, b.coords], {
-            dashArray: "4 8",
-            color: FALLBACK_COLOR,
-            weight: 3,
-            opacity: 0.8,
-            haloWeight: 5,
-            className: "route--pending"
-          });
+          const pendingLayers = addRouteLine([a.coords, b.coords], styleFor("pending"));
+          legShapes[i] = { latlngs: [a.coords, b.coords], kind: "pending" };
+          recordRouteLayers(pendingLayers);
+          pendingLayersByLeg[i] = pendingLayers;
         }
 
+        // Removes the CURRENT provisional layers for this leg — redrawRoutes
+        // may have replaced the first-draw pending layers with freshly
+        // styled ones mid-flight, so we track them per-leg instead of in a
+        // stale closure.
         function removePending() {
-          if (!pendingLayers) return;
-          pendingLayers.forEach(function (layer) {
-            map.removeLayer(layer);
-          });
-          pendingLayers = null;
+          const current = pendingLayersByLeg[i];
+          if (current) {
+            current.forEach(function (layer) {
+              map.removeLayer(layer);
+            });
+            pendingLayersByLeg[i] = null;
+          }
         }
 
         return osrmRoute(a.coords, b.coords).then(function (route) {
           if (destroyed) return;
           removePending();
-          const dark = effectiveTheme() === "dark";
-          addRouteLine(route.polyline, {
-            color: BRAND_COLOR,
-            weight: 4,
-            opacity: dark ? 0.9 : 0.8,
-            haloWeight: 7
-          });
+          const layers = addRouteLine(route.polyline, styleFor("route"));
+          legShapes[i] = { latlngs: route.polyline, kind: "route" };
+          recordRouteLayers(layers);
           setLegResult(i, a.title, b.title, route.km, route.min, "driving", "osrm");
         }).catch(function () {
           if (destroyed) return;
           removePending();
-          addRouteLine([a.coords, b.coords], {
-            dashArray: "4 8",
-            color: FALLBACK_COLOR,
-            weight: 3,
-            opacity: 0.8,
-            haloWeight: 5
-          });
+          const layers = addRouteLine([a.coords, b.coords], styleFor("estimate"));
+          legShapes[i] = { latlngs: [a.coords, b.coords], kind: "estimate" };
+          recordRouteLayers(layers);
           setLegResult(
             i,
             a.title,
@@ -805,13 +861,9 @@
       // flight / ferry (and any other non-driving mode): fixed dashed straight line.
       if (!destroyed) {
         try {
-          addRouteLine([a.coords, b.coords], {
-            dashArray: "6 10",
-            color: WATER_COLOR,
-            weight: 3,
-            opacity: 0.8,
-            haloWeight: 5
-          });
+          const layers = addRouteLine([a.coords, b.coords], styleFor("water"));
+          legShapes[i] = { latlngs: [a.coords, b.coords], kind: "water" };
+          recordRouteLayers(layers);
           setLegResult(
             i,
             a.title,
@@ -824,6 +876,38 @@
         } catch (err) { /* malformed coordinates — skip visual, keep going */ }
       }
       return Promise.resolve();
+    }
+
+    /** Re-style every already-drawn route line after a basemap or theme
+     *  switch. Removes all tracked route layers and re-draws from the recorded
+     *  geometry (legShapes) with the style that matches the current base/theme:
+     *  - sat base                    -> white main + dark casing (addRouteLine's
+     *    currentBase branch), regardless of what was drawn before the switch;
+     *  - "map" base + dark theme     -> white halo + green main;
+     *  - "map" base + light / "osm"  -> single green main.
+     *  Legs whose OSRM request is still in flight keep their dashed
+     *  route--pending treatment (the CSS animation continues) and the new
+     *  pending layers are tracked in pendingLayersByLeg so the eventual
+     *  resolve/estimate still removes them. Never invoked during the initial
+     *  drawing flow — only from applyTheme / setBase switch events. */
+    function redrawRoutes() {
+      if (destroyed) return;
+      routeLayers.forEach(function (layer) {
+        map.removeLayer(layer);
+      });
+      routeLayers.length = 0;
+      for (let i = 0; i < legShapes.length; i++) {
+        const shape = legShapes[i];
+        if (!shape) continue;
+        const result = legResults[i];
+        if (result && result.mode === "skip") continue;
+        const pending = !result; // leg still resolving — keep dashed pending style
+        const layers = addRouteLine(shape.latlngs, styleFor(shape.kind));
+        recordRouteLayers(layers);
+        if (pending && layers) {
+          pendingLayersByLeg[i] = layers;
+        }
+      }
     }
 
     function fitToWaypoints() {
@@ -877,9 +961,15 @@
       if (destroyed) return;
       // Satellite / OSM layers don't depend on the theme — only the
       // theme-aware "map" base is swapped on "themechange" / setTheme.
-      if (currentBase !== "map") return;
-      const theme = themeArg === "dark" || themeArg === "light" ? themeArg : effectiveTheme();
-      replaceTileLayer("map", theme);
+      if (currentBase === "map") {
+        const theme = themeArg === "dark" || themeArg === "light" ? themeArg : effectiveTheme();
+        replaceTileLayer("map", theme);
+      }
+      // Re-style already-drawn routes on ANY theme change: dark↔light flips
+      // the halo treatment on the "map" base; redrawing on sat/osm is a
+      // harmless no-op style-wise (routeTheme() forces "light" for sat).
+      // Only reached on themechange/setTheme — never during initial drawing.
+      redrawRoutes();
     }
 
     /** Per-map basemap swap (also invoked via setBaseAll on every live map and
@@ -888,6 +978,10 @@
       if (destroyed) return;
       if (mode !== "map" && mode !== "sat" && mode !== "osm") return;
       replaceTileLayer(mode, effectiveTheme());
+      // Redraw every route line so already-drawn legs adopt the new base's
+      // styling (e.g. sat: white main + dark casing instead of brand green on
+      // green satellite imagery).
+      redrawRoutes();
       if (switcher) switcher.update(mode);
     }
 
