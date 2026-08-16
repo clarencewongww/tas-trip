@@ -1,3 +1,6 @@
 .DS_Store
 qa-shots/
 schedule/
+
+# Handover doc — never commit
+PROGRESS.md
