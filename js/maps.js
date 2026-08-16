@@ -679,9 +679,34 @@
     // the line off the dark CARTO tiles); a single line in light mode. For
     // dashed fallback/water lines the halo stays solid while the main line
     // keeps its dashes.
+    //
+    // Satellite imagery is always light, so a bright main line needs the
+    // opposite treatment: a dark casing underneath (solid, even for dashed
+    // lines) with the main line in white. Sat wins over the dark-map white
+    // halo whenever both could apply — this branch returns before the pair
+    // below runs, so the two schemes never coexist.
     function addRouteLine(latlngs, style) {
       if (destroyed || !style) return null;
       const layers = [];
+      if (currentBase === "sat") {
+        layers.push(
+          L.polyline(latlngs, {
+            color: "#0e1a12",
+            weight: style.haloWeight ? style.haloWeight + 1 : style.weight + 4,
+            opacity: 0.85,
+            interactive: false
+          }).addTo(map)
+        );
+        const satOpts = {
+          color: "#ffffff",
+          weight: style.weight,
+          opacity: 0.95
+        };
+        if (style.dashArray) satOpts.dashArray = style.dashArray;
+        if (style.className) satOpts.className = style.className;
+        layers.push(L.polyline(latlngs, satOpts).addTo(map));
+        return layers;
+      }
       const dark = routeTheme() === "dark";
       if (dark) {
         layers.push(
