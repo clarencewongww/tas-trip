@@ -1497,18 +1497,26 @@ img, svg {
     border-top: none; /* the header's border-bottom already divides the columns */
   }
 
-  /* Sticky day tabs: pin directly below the sticky now-rail (top =
-     --map-offset = rail height + 12px gap) so the user can switch days
-     without scrolling back up. Full-width strip (margin/max-width reset)
-     with gutters matched to the 1120px content column, so the pills stay
-     aligned with the page gutter at every desktop width. */
+  /* Sticky day tabs: the strip pins at the very top of the viewport and
+     slides UNDER the opaque sticky now-rail (z 900), so no scrolled content
+     can show between the two bars. padding-top = --map-offset makes the
+     strip's own opaque --surface background fill the band from the rail's
+     bottom down to the pill row at every rail height (varies with width and
+     preview state). Full-width strip (margin/max-width reset) with gutters
+     matched to the 1120px content column, so the pills stay aligned with the
+     page gutter at every desktop width. */
   .day-tabs,
   #day-tabs {
     position: sticky;
-    top: var(--map-offset);
+    top: 0; /* pin at viewport top, sliding UNDER the opaque now-rail (z 900) */
     z-index: 800; /* below the now-rail (900), above day content */
     margin: 0;
     max-width: none;
+    /* padding-top keeps the pill row below the rail; the strip's own opaque
+       --surface background fills the band between the rail's bottom and the
+       pills (rail height varies: ~112px normal, ~143px preview state). */
+    padding-top: var(--map-offset);
+    padding-bottom: 16px;
     padding-inline: max(24px, calc((100vw - 1120px) / 2));
     box-shadow: var(--shadow);
   }
