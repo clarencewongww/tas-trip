@@ -154,7 +154,6 @@ window.TRIP = {
       town: "Hobart",
       hotel: "Travelodge Hotel Hobart",
       hotelNote: "2 nights",
-      notes: ["Travelodge Family Room sleeps 4 — confirm 2 rooms for 5 people when booking."],
       origin: { title: "Depart — Discovery Resorts Cradle Mountain", coords: [-41.5802, 145.9378], departTime: "07:30", gmapsQuery: "Discovery Resorts - Cradle Mountain" },
       entries: [
         { start: "08:45", end: "11:30", title: "Dove Lake Circuit walk", place: "Dove Lake, Cradle Mountain", coords: [-41.6552, 145.9609], gmapsQuery: "Dove Lake Cradle Mountain", kind: "hike", note: "2–3 h loop beneath Cradle Mountain · Holiday Pass $98.35/car + shuttle $15.50/adult" },
