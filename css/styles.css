@@ -1432,15 +1432,21 @@ img, svg {
   /* Desktop: timeline in the left column, map in the right column. The map is
      sticky so it stays in view while the timeline scrolls. --map-offset clears
      the sticky now-rail (#now-bar) plus a 12px gap so the map never slides
-     underneath it. (The .topbar is position: relative inside the scrolling
-     hero — the now-rail is the element actually pinned to the top during
-     day-card scroll, and its height varies with viewport width, so the offset
-     is tiered below.) */
-  .day-card {
+     underneath it — the sticky day tabs (pinned directly below the now-rail)
+     use the same var as their `top` inset. (The .topbar is position: relative
+     inside the scrolling hero — the now-rail is the element actually pinned to
+     the top during day-card scroll, and its height varies with viewport width,
+     so the offset is tiered below. Hoisted to :root so the tabs strip, which
+     lives outside the day cards, can read it too.) */
+  /* --map-offset is hoisted to :root so the sticky day tabs strip (which lives
+     outside the day cards) shares the exact inset that clears the now-rail. */
+  :root, .day-card {
     /* Tier 1 (1024–1079px): the now-rail controls wrap onto more lines there,
        so the rail is ~177px tall. */
     --map-offset: 189px;
+  }
 
+  .day-card {
     display: grid;
     /* Slightly wider timeline column than map (1.1fr vs 1fr) so stop titles
        like "Check in — Riverfront Motel & Restaurant" fit on one line. */
@@ -1490,6 +1496,28 @@ img, svg {
     min-height: 480px;
     border-top: none; /* the header's border-bottom already divides the columns */
   }
+
+  /* Sticky day tabs: pin directly below the sticky now-rail (top =
+     --map-offset = rail height + 12px gap) so the user can switch days
+     without scrolling back up. Full-width strip (margin/max-width reset)
+     with gutters matched to the 1120px content column, so the pills stay
+     aligned with the page gutter at every desktop width. */
+  .day-tabs,
+  #day-tabs {
+    position: sticky;
+    top: var(--map-offset);
+    z-index: 800; /* below the now-rail (900), above day content */
+    margin: 0;
+    max-width: none;
+    padding-inline: max(24px, calc((100vw - 1120px) / 2));
+    box-shadow: var(--shadow);
+  }
+
+  /* Anchor/scroll-into-view clears BOTH sticky bars now: rail (--map-offset)
+     + the tabs strip (~76px) + a 12px breathing gap. */
+  html {
+    scroll-padding-top: calc(var(--map-offset) + 88px);
+  }
 }
 
 /* Sticky-map offset tiers (see --map-offset above). The now-rail height is
@@ -1497,13 +1525,13 @@ img, svg {
    Tier 1 1024–1079px → rail ≈177px; Tier 2 1080–1799px → rail ≈143px
    (measured normal + preview states); Tier 3 ≥1800px → rail ≈112–127px. */
 @media (min-width: 1080px) {
-  .day-card {
+  :root, .day-card {
     --map-offset: 155px;
   }
 }
 
 @media (min-width: 1800px) {
-  .day-card {
+  :root, .day-card {
     --map-offset: 139px;
   }
 }
