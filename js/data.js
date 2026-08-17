@@ -19,10 +19,10 @@ window.TRIP = {
       origin: null,
       entries: [
         { start: "21:10", end: "23:40", title: "Reach Changi Airport for check-in", place: "Singapore Changi Airport (SIN)", coords: [1.3644, 103.9915], gmapsQuery: "Singapore Changi Airport", kind: "flight", note: "Be at the airport by 9:10 pm SGT · check-in closes 22:40" },
-        { start: "23:40", end: "23:59", title: "Flight Singapore → Melbourne", place: "Singapore Changi Airport (SIN)", coords: [1.3644, 103.9915], gmapsQuery: "Singapore Changi Airport", kind: "flight", note: "Departs 11:40 pm SGT (2:40 am Hobart time) · lands Melbourne 10:20 am" }
+        { start: "23:40", end: "23:59", title: "Flight Singapore → Melbourne", place: "Melbourne Airport (MEL)", coords: [-37.6708, 144.843], gmapsQuery: "Melbourne Airport", kind: "flight", note: "Departs 11:40 pm SGT (2:40 am Hobart time) · lands Melbourne 10:20 am next day" }
       ],
       legs: [
-        { from: "Reach Changi Airport for check-in", to: "Flight Singapore → Melbourne", mode: "flight", fallbackMin: 150 }
+        { from: "Reach Changi Airport for check-in", to: "Flight Singapore → Melbourne", mode: "flight", fallbackMin: 460 }
       ]
     },
     {
